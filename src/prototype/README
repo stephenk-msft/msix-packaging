@@ -1,0 +1,7 @@
+IMPORTANT: This is a prototype that will hopefully be obliterated and re-implemented at some point in life
+
+Currently packs for windows. Non-Windows soon...
+
+Takes a dependency on zlib, xerces and openssl.
+
+Usage: prototype.exe <folder to pack>

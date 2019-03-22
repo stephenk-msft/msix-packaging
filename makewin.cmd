@@ -1,5 +1,4 @@
 @echo off
-SETLOCAL
 
 if "%~1" == "" goto USAGE
 if /I "%~1" == "--help" goto USAGE
