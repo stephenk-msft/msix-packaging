@@ -5,7 +5,8 @@
 
 #pragma once
 
-// Trying to keee msix files not involved in this prototype. I'm just dumping code here with minor tweaks.
+// Trying to keep msix files not involved at all in the prototype, 
+// so when i needed something i just copy it here.
 
 #ifdef WIN32
 #include <windows.h>

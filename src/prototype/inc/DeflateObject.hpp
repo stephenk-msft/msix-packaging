@@ -10,14 +10,6 @@
 #include <zlib.h>
 #include <iostream>
 
-// Note: either there's a here bug or zlib and opc result in the same output
-// eg. unpacking and packing TestAppxPackage_Win32.appx file TestAppxPackage.exe 3 blocks
-// ill keep looking in to it, but a package craete can be succesfully unpacked via makeappx so...
-// makeappx | Z_DEFAULT_COMPRESSION | Z_BEST_COMPRESSION | Z_BEST_SPEED
-//    20070                   20066                19980          22990
-//    24274                   24351                24150          26839
-//    21197                   21190                21132          22513
-// Using Z_BEST_COMPRESSION and hoping for the best
 class DeflateObject final
 {
 public:
@@ -46,34 +38,21 @@ public:
     // Z_FINISH        4
     // Z_BLOCK         5
     // Z_TREES         6
-    void Deflate(int flush)
+    std::vector<std::uint8_t> Deflate()
     {
-        std::vector<std::uint8_t> deflateBuffer(1024); // experiment with bigger buffers
+        std::vector<std::uint8_t> compressedBuffer;
+        std::vector<std::uint8_t> deflateBuffer(1024);
         do
         {
             SetOutput(deflateBuffer.data(), deflateBuffer.size());
-            auto result = deflate(&m_zstrm, flush);
-            ThrowIf(
-                (result != Z_OK) && 
-                (flush == Z_FINISH && result != Z_STREAM_END), // Z_FINISH returns Z_STREAM_END when is done
-                "zlib error");
+            auto result = deflate(&m_zstrm, Z_BLOCK);
+            ThrowIf(result != Z_OK, "zlib error");
             auto have = deflateBuffer.size() - GetAvailableDestinationSize();
-            m_compressedBuffer.insert(m_compressedBuffer.end(), deflateBuffer.data(), deflateBuffer.data() + have);
+            compressedBuffer.insert(compressedBuffer.end(), deflateBuffer.data(), deflateBuffer.data() + have);
             //The way we tell that deflate() has no more output is by seeing that it did not fill the output
             // buffer, leaving avail_out greater than zero.
         } while (GetAvailableDestinationSize() == 0);
-    }
-
-    std::vector<std::uint8_t> Finish()
-    {
-        // If the parameter flush is set to Z_FINISH, pending input is processed,
-        // pending output is flushed and deflate returns with Z_STREAM_END if there was
-        // enough output space. If deflate returns with Z_OK or Z_BUF_ERROR, this
-        // function must be called again with Z_FINISH and more output space (updated
-        // avail_out) but no more input data, until it returns with Z_STREAM_END or an
-        // error.
-        Deflate(Z_FINISH);
-        return m_compressedBuffer;
+        return std::move(compressedBuffer);
     }
 
     size_t GetAvailableSourceSize() noexcept
@@ -100,5 +79,4 @@ private:
     }
 
     z_stream m_zstrm;
-    std::vector<std::uint8_t> m_compressedBuffer;
 };

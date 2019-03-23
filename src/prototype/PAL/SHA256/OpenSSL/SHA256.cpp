@@ -14,4 +14,6 @@ namespace MSIX {
         ::SHA256(buffer, cbBuffer, hash.data());
         return true;
     }
+
+    // TODO: base64 using openssl
 } // namespace MSIX {

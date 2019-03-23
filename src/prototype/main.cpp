@@ -42,7 +42,7 @@ public:
         m_xmlFactory = std::move(CreateXmlFactory());
 
         m_contentTypeWriter = std::make_unique<ContentTypeWriter>(m_xmlFactory);
-        std::string placeholder = "placeholder.appx";
+        std::string placeholder = "placeholder.msix";
         m_zipObject = std::make_unique<ZipObjectWriter>(placeholder);
 
         // Creating the blocks
@@ -81,21 +81,15 @@ public:
     }
 
 private:
-    std::vector<std::uint8_t> DeflateData(std::vector<std::uint8_t>& buffer)
-    {
-        DeflateObject deflateObj;
-        deflateObj.SetInput(buffer.data(), buffer.size());
-        deflateObj.Deflate(Z_NO_FLUSH); // this is weird, hopefully with the state machine it wont
-        return std::move(deflateObj.Finish());
-    }
-
     void AddToZip(std::string name, std::vector<std::uint8_t>& buffer)
     {
         auto lfh = m_zipObject->WriteLfh(name, true);
         std::uint32_t crc = crc32(0, buffer.data(), static_cast<uInt>(buffer.size()));
-        auto deflateBuffer = DeflateData(buffer);
-        m_zipObject->WriteBuffer(deflateBuffer);
-        m_zipObject->WriteCdh(*lfh, crc, deflateBuffer.size(), buffer.size());
+        DeflateObject deflateObj;
+        deflateObj.SetInput(buffer.data(), buffer.size());
+        auto compressedBuffer =  deflateObj.Deflate();
+        m_zipObject->WriteBuffer(compressedBuffer);
+        m_zipObject->WriteCdh(*lfh, crc, compressedBuffer.size(), buffer.size());
     }
 
     void AddToBlockMapAndZip(PayloadFile& payloadFile)
@@ -168,6 +162,7 @@ private:
         std::unique_ptr<Block> blockData;
         auto bytesToRead = file->GetSize();
         std::uint32_t crc = 0;
+        DeflateObject deflateObj;
         while (bytesToRead > 0)
         {
             // Calculate the size of the next block to add
@@ -190,7 +185,9 @@ private:
 
             if (payloadFile->compressionOption == APPX_COMPRESSION_OPTION_NORMAL)
             {
-                auto compressedBuffer = DeflateData(buffer);
+                // maybe make this into one call?
+                deflateObj.SetInput(buffer.data(), buffer.size());
+                auto compressedBuffer =  deflateObj.Deflate();
                 buffer.swap(compressedBuffer);
             }
 
