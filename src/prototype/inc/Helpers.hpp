@@ -21,6 +21,8 @@
 #include <array>
 #include <iostream>
 #include <stdexcept>
+#include <locale>
+#include <codecvt>
 
 #define ThrowIf(a, m) if (a) { throw std::runtime_error(m); }
 
@@ -31,20 +33,29 @@ typedef enum APPX_COMPRESSION_OPTION
     APPX_COMPRESSION_OPTION_NORMAL = 1,
 } APPX_COMPRESSION_OPTION;
 
-// UnicodeConversion.cpp - todo add non-windows
+// UnicodeConversion.cpp 
 inline std::wstring utf8_to_wstring(const std::string& utf8string)
 {
+    #ifdef WIN32
     int size = MultiByteToWideChar(CP_UTF8, 0, utf8string.data(), static_cast<int>(utf8string.size()), nullptr, 0);
     std::wstring result(size, 0);
     MultiByteToWideChar(CP_UTF8, 0, utf8string.data(), static_cast<int>(utf8string.size()), &result[0], size);
+    #else
+    auto converted = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(utf8string.data());
+    std::wstring result(converted.begin(), converted.end());
+    #endif
     return result;
 }
 
 inline std::string wstring_to_utf8(const std::wstring& utf16string)
 {
+    #ifdef WIN32
     int size = WideCharToMultiByte(CP_UTF8, 0, utf16string.data(), static_cast<int>(utf16string.size()), nullptr, 0, nullptr, nullptr);
     std::string result(size, 0);
     WideCharToMultiByte(CP_UTF8, 0, utf16string.data(), static_cast<int>(utf16string.size()), &result[0], size, nullptr, nullptr);
+    #else
+    auto result = std::wstring_convert<std::codecvt_utf8<wchar_t>>{}.to_bytes(utf16string.data());
+    #endif
     return result;
 }
 
@@ -62,7 +73,7 @@ public:
         ThrowIf(err != 0, "file error");
         #else
         m_file = std::fopen(name.c_str(), modes[mode]);
-        // THROW IF ERROR
+        ThrowIf(!m_file, "cant open file" + name);
         #endif
 
         fseek(m_file, 0, SEEK_END);

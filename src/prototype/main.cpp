@@ -6,7 +6,7 @@
 
 #include "DirectoryRead.hpp"
 #include "BlockMapWriter.hpp"
-#include "SHA256.hpp"
+#include "Encoding.hpp"
 #include "DeflateObject.hpp"
 #include "ContentTypeWriter.hpp"
 #include "ZipObject.hpp"
@@ -39,14 +39,13 @@ class PackageBuilder final
 public:
     PackageBuilder(std::multimap<std::uint64_t, std::string>& filesToPack, std::string root) : m_root(root)
     {
-        m_xmlFactory = std::move(CreateXmlFactory());
+        m_xmlFactory = CreateXmlFactory();
 
         m_contentTypeWriter = std::make_unique<ContentTypeWriter>(m_xmlFactory);
         std::string placeholder = "placeholder.msix";
         m_zipObject = std::make_unique<ZipObjectWriter>(placeholder);
 
         // Creating the blocks
-        bool hasManifest = false;
         for (auto& file : filesToPack)
         {
             ProcessFiles(file.second);
@@ -223,20 +222,19 @@ int main(int argc, char* argv[])
 
     auto pathRoot = std::string(argv[1]);
 
-    // payload files are added by last modified time. using multimap to get
-    // "free" sorting and to have repeated keys in the unlikely case files
-    // have the same last modified time/
-    std::multimap<std::uint64_t, std::string> files;
-    std::string empty; // this is weird... please fix it
-    GetAllFilesInDirectory(pathRoot, empty ,files);
-
     try
     {
+        // payload files are added by last modified time. using multimap to get
+        // "free" sorting and to have repeated keys in the unlikely case files
+        // have the same last modified time/
+        std::multimap<std::uint64_t, std::string> files;
+        std::string empty; // this is weird... please fix it
+        GetAllFilesInDirectory(pathRoot, empty ,files);
         auto builder = PackageBuilder(files, pathRoot);
     }
-    catch(...)
+    catch(const std::exception& e)
     {
-        std::cout << ":( " << std::endl;
+        std::cout << e.what() << std::endl;
         return 1;
     }
 

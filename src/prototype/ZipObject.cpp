@@ -254,7 +254,7 @@ std::unique_ptr<LocalFileHeader> ZipObjectWriter::WriteLfh(std::string& name, bo
     std::size_t bytesWritten = 0;
     m_package->Write(static_cast<void*>(lfhBytes.data()), lfhBytes.size(), &bytesWritten);
     m_state = ZipObjectWriter::State::ReadyForBuffer;
-    return std::move(lfh);
+    return lfh;
 }
 
 void ZipObjectWriter::WriteBuffer(std::vector<std::uint8_t>& buffer)
@@ -269,7 +269,6 @@ void ZipObjectWriter::WriteCdh(LocalFileHeader& lfh, std::uint32_t crc, std::uin
 {
     ThrowIf(m_state != ZipObjectWriter::State::ReadyForBufferOrCdh, "expecting LFH or Close");
     auto lfhOffset = lfh.GetOffset();
-    auto lfhSize = lfh.Size();
     auto whereweshouldbe = lfhOffset + lfh.Size() + compressedSize;
     // we should expect that we are actually saying the truth
     ThrowIf(whereweshouldbe != m_package->GetOffset(), "Invalid data");
@@ -279,7 +278,8 @@ void ZipObjectWriter::WriteCdh(LocalFileHeader& lfh, std::uint32_t crc, std::uin
     std::size_t bytesWritten = 0;
     m_package->Write(static_cast<void*>(dataDescriptorBytes.data()), dataDescriptorBytes.size(), &bytesWritten);
     // create cdh
-    auto cdh = std::make_unique<CentralDirectoryFileHeader>(lfh.GetName(), crc, compressedSize, uncompressedSize, lfhOffset, lfh.GetCompressionMethod());
+    auto name = lfh.GetName();
+    auto cdh = std::make_unique<CentralDirectoryFileHeader>(name, crc, compressedSize, uncompressedSize, lfhOffset, lfh.GetCompressionMethod());
     m_cdhs.push_back(std::move(cdh));
     m_state = ZipObjectWriter::State::ReadyForLfhOrClose;
 }

@@ -1,15 +1,13 @@
 IMPORTANT: This is a prototype that will hopefully be obliterated and re-implemented at some point in life
 
-Currently packs for windows. Non-Windows platforms soon...
+Currently creates a msix package for windows and macos (probably linux too)
 
-Takes a dependency on zlib, xerces and openssl (not yet).
-
+Takes a dependency on zlib, xerces and openssl (only for non-win).
 
 Usage: prototype.exe <folder to pack>
-Output: placeholder.msix
+Output: placeholder.msix 
 
 TODOs:
-- Implement base64 encoding using openssl or handrolled
-- Verify builds and works on non-windows platforms
+- Verify builds and works on Linux
 - Add output package name in command line option
-- Make it pretty
+- Make it pretty(ier)

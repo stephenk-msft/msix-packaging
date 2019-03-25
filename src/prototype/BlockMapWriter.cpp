@@ -5,7 +5,7 @@
 
 #include "BlockMapWriter.hpp"
 #include "XmlWriter.hpp"
-#include "SHA256.hpp"
+#include "Encoding.hpp"
 
 #include <memory>
 #include <map>
@@ -40,7 +40,7 @@ std::unique_ptr<ProtoXmlElement> BlockMapWriter::AddFile(std::string name, std::
     fileElement->AddAttribute("LfhSize", std::to_string(lfh));
     fileElement->AddAttribute("Size", std::to_string(uncompressedSize));
     m_root->AppendChild(fileElement.get());
-    return std::move(fileElement);
+    return fileElement;
 }
 
 void BlockMapWriter::AddBlockToElement(ProtoXmlElement& parent, std::string& hash, std::size_t size)

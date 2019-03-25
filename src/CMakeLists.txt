@@ -7,6 +7,8 @@ add_custom_target(SRC)
 add_subdirectory(msix)
 add_subdirectory(makemsix)
 
-add_subdirectory(prototype)
+if ((WIN32) OR (MACOS) OR (LINUX))
+    add_subdirectory(prototype)
+endif()
 
 add_dependencies(makemsix msix)

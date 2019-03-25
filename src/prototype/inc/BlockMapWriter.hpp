@@ -11,9 +11,9 @@ class BlockMapWriter final
 {
 public:
     BlockMapWriter(std::shared_ptr<ProtoXmlFactory> xmlFactory);
-    std::unique_ptr<ProtoXmlElement> BlockMapWriter::AddFile(std::string name, std::uint64_t uncompressedSize, std::uint32_t lfh);
+    std::unique_ptr<ProtoXmlElement> AddFile(std::string name, std::uint64_t uncompressedSize, std::uint32_t lfh);
     void AddBlockToElement(ProtoXmlElement& parent, std::string& hash, std::size_t size);
-    std::vector<std::uint8_t> GetStream() { return std::move(m_xmlWriter->GetDom()); } // this would be like get blockman stream or so
+    std::vector<std::uint8_t> GetStream() { return m_xmlWriter->GetDom(); } // this would be like get blockman stream or so
 
 protected:
     std::shared_ptr<ProtoXmlElement> m_root;

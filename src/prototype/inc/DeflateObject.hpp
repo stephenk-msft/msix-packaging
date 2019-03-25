@@ -52,7 +52,7 @@ public:
             //The way we tell that deflate() has no more output is by seeing that it did not fill the output
             // buffer, leaving avail_out greater than zero.
         } while (GetAvailableDestinationSize() == 0);
-        return std::move(compressedBuffer);
+        return compressedBuffer;
     }
 
     size_t GetAvailableSourceSize() noexcept

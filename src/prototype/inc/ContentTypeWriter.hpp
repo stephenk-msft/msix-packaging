@@ -16,7 +16,7 @@ public:
     ContentTypeWriter(std::shared_ptr<ProtoXmlFactory> xmlFactory);
     void AddDefault(std::string& contentType, std::string& extension, bool force = false);
     void AddOverride(std::string contentType, std::string partName);
-    std::vector<std::uint8_t> GetStream() { return std::move(m_xmlWriter->GetDom()); } // this would be like get blockman stream or so
+    std::vector<std::uint8_t> GetStream() { return m_xmlWriter->GetDom(); } // this would be like get blockman stream or so
 
 protected:
     std::set<std::string> m_extensions;

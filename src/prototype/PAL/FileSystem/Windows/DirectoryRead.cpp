@@ -11,7 +11,7 @@
 #include <string>
 #include <iostream>
 
-void GetAllFilesInDirectory(std::string& directoryUtf8, std::string& relativePath, std::multimap<std::uint64_t, std::string>& files)
+void GetAllFilesInDirectory(std::string& directory, std::string& relativePath, std::multimap<std::uint64_t, std::string>& files)
 {
     auto directory = utf8_to_wstring(directoryUtf8);
     directory.append(L"\\*");

@@ -181,7 +181,7 @@ public:
         {
             result[i] = formatTargetBuffer[i];
         }
-        return std::move(result);
+        return result;
     }
 
 protected:
