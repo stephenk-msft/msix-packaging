@@ -12,6 +12,7 @@
 class ProtoXmlElement
 {
 public:
+    virtual ~ProtoXmlElement() {}
     virtual void AddAttribute(std::string name, std::string value) = 0;
     virtual void AppendChild(ProtoXmlElement* protoXmlElement) = 0;
 };
@@ -19,6 +20,7 @@ public:
 class ProtoXmlWriter
 {
 public:
+    virtual ~ProtoXmlWriter() {}
     virtual std::shared_ptr<ProtoXmlElement> GetRoot() = 0;
     virtual std::unique_ptr<ProtoXmlElement> CreateElement(std::string name) = 0;
     virtual std::vector<std::uint8_t> GetDom() = 0;
@@ -27,6 +29,7 @@ public:
 class ProtoXmlFactory
 {
 public:
+    virtual ~ProtoXmlFactory() {}
     virtual std::unique_ptr<ProtoXmlWriter> CreateDom(std::string xmlNamespace, std::string root) = 0;
 };
 

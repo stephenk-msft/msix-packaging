@@ -24,4 +24,3 @@ std::string Base64::ComputeBase64(std::uint8_t *buffer, std::uint32_t cbBuffer)
     return std::string(result.begin(), result.end());
 }
 
-    // TODO: base64 using openssl

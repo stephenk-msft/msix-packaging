@@ -4,7 +4,9 @@
 // 
 #pragma once
 
+#include <cstdint>
 #include <vector>
+#include <string>
 
 class SHA256
 {
