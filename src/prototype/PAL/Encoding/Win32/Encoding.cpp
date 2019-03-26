@@ -111,7 +111,7 @@ std::string Base64::ComputeBase64(std::uint8_t *buffer, std::uint32_t cbBuffer)
     ThrowIf(!CryptBinaryToStringW(buffer, cbBuffer, encodingFlags, nullptr, &encodedHashSize),
         "CryptBinaryToStringW failed");
     result.resize(encodedHashSize);
-    ThrowIt(!CryptBinaryToStringW(buffer, cbBuffer, encodingFlags, const_cast<wchar_t*>(result.data()), &encodedHashSize),
+    ThrowIf(!CryptBinaryToStringW(buffer, cbBuffer, encodingFlags, const_cast<wchar_t*>(result.data()), &encodedHashSize),
         "CryptBinaryToStringW failed");
     return wstring_to_utf8(result);
 }

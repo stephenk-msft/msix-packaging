@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
 
 project(prototype)
 
-if (Win32)
+if (WIN32)
     set(DirectoryObject PAL/FileSystem/Windows/DirectoryRead.cpp)
     set(Encoding PAL/Encoding/Win32/Encoding.cpp)
 else()
