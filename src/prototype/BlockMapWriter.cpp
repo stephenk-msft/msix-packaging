@@ -10,6 +10,7 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <algorithm>
 
 BlockMapWriter::BlockMapWriter(std::shared_ptr<ProtoXmlFactory> xmlFactory) : m_xmlFactory(std::move(xmlFactory))
 {

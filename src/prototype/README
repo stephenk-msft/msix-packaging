@@ -1,6 +1,6 @@
 IMPORTANT: This is a prototype that will hopefully be obliterated and re-implemented at some point in life
 
-Currently creates a msix package for windows and macos (probably linux too)
+Currently creates a msix package for windows, macos and linux
 
 Takes a dependency on zlib, xerces and openssl (only for non-win).
 
@@ -8,6 +8,5 @@ Usage: prototype.exe <folder to pack>
 Output: placeholder.msix 
 
 TODOs:
-- Verify builds and works on Linux
 - Add output package name in command line option
-- Make it pretty(ier)
+- Delete msix package if there's a failure
