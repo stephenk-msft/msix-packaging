@@ -161,7 +161,7 @@ private:
         std::unique_ptr<Block> blockData;
         auto bytesToRead = file->GetSize();
         std::uint32_t crc = 0;
-        DeflateObject deflateObj;
+        
         while (bytesToRead > 0)
         {
             // Calculate the size of the next block to add
@@ -184,6 +184,7 @@ private:
 
             if (payloadFile->compressionOption == APPX_COMPRESSION_OPTION_NORMAL)
             {
+                DeflateObject deflateObj;
                 // maybe make this into one call?
                 deflateObj.SetInput(buffer.data(), buffer.size());
                 auto compressedBuffer =  deflateObj.Deflate();

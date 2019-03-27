@@ -45,7 +45,7 @@ public:
         do
         {
             SetOutput(deflateBuffer.data(), deflateBuffer.size());
-            auto result = deflate(&m_zstrm, Z_BLOCK);
+            auto result = deflate(&m_zstrm, Z_FULL_FLUSH);
             ThrowIf(result != Z_OK, "zlib error");
             auto have = deflateBuffer.size() - GetAvailableDestinationSize();
             compressedBuffer.insert(compressedBuffer.end(), deflateBuffer.data(), deflateBuffer.data() + have);
