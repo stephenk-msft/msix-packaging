@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
 
-project(prototype)
+project(pack-prototype)
 
 if (WIN32)
     set(DirectoryObject PAL/FileSystem/Windows/DirectoryRead.cpp)
@@ -26,13 +26,13 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE inc) # this is the inc under prototype
 
-# windows specific
+# For windows use inbox crypto stack, for other platforms use openssl
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE bcrypt crypt32 wintrust)
 else()
     # include the libraries needed to use OpenSSL
     target_include_directories(${PROJECT_NAME} PRIVATE ${OpenSLL_INCLUDE_PATH})
-    if((IOS) OR (MACOS))
+    if(MACOS)
         target_link_libraries(${PROJECT_NAME} PRIVATE crypto -Wl,-dead_strip)
     else()
         target_link_libraries(${PROJECT_NAME} PRIVATE crypto -Wl,--gc-sections)

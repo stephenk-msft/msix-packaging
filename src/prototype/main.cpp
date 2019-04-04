@@ -37,16 +37,22 @@ typedef struct PayloadFile // rename this
 class PackageBuilder final
 {
 public:
-    PackageBuilder(std::multimap<std::uint64_t, std::string>& filesToPack, std::string root) : m_root(root)
+    PackageBuilder(std::string root, std::string packageName) : m_root(root)
     {
         m_xmlFactory = CreateXmlFactory();
 
         m_contentTypeWriter = std::make_unique<ContentTypeWriter>(m_xmlFactory);
-        std::string placeholder = "placeholder.msix";
-        m_zipObject = std::make_unique<ZipObjectWriter>(placeholder);
+        m_zipObject = std::make_unique<ZipObjectWriter>(packageName);
+
+        // payload files are added by last modified time. using multimap to get
+        // "free" sorting and to have repeated keys in the unlikely case files
+        // have the same last modified time
+        std::multimap<std::uint64_t, std::string> files;
+        std::string empty; // this is weird... please fix it
+        GetAllFilesInDirectory(root, empty ,files);
 
         // Creating the blocks
-        for (auto& file : filesToPack)
+        for (auto& file : files)
         {
             ProcessFiles(file.second);
         }
@@ -219,19 +225,31 @@ std::string m_root;
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2) { return -1; } // usage is prototype.exe <path>
+    if (argc != 5) { return -1; } // usage is prototype.exe -d <path> -p <package>
 
-    auto pathRoot = std::string(argv[1]);
+    std::string directoryToPack;
+    std::string package;
+    for (int i = 1; i < 5; i++)
+    {
+        std::string arg(argv[i]);
+        if (arg == "-d")
+        {
+            directoryToPack = std::string(argv[++i]);
+        }
+        else if (arg == "-p")
+        {
+            package = std::string(argv[++i]);
+        }
+        else
+        {
+            std::cout << "invalid command" << std::endl;
+            return -1;
+        }
+    }
 
     try
     {
-        // payload files are added by last modified time. using multimap to get
-        // "free" sorting and to have repeated keys in the unlikely case files
-        // have the same last modified time/
-        std::multimap<std::uint64_t, std::string> files;
-        std::string empty; // this is weird... please fix it
-        GetAllFilesInDirectory(pathRoot, empty ,files);
-        auto builder = PackageBuilder(files, pathRoot);
+        auto builder = PackageBuilder(directoryToPack, package);
     }
     catch(const std::exception& e)
     {
