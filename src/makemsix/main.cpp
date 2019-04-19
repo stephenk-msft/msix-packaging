@@ -18,7 +18,8 @@ enum class UserSpecified
     Nothing,
     Help,
     Unpack,
-    Unbundle
+    Unbundle,
+    Sign,
 };
 
 // Tracks the state of the current parse operation as well as implements input validation
@@ -126,8 +127,8 @@ struct Command
 {
     typedef bool (*CBF)(State& state);
 
-    Command(const std::string& name, const std::string& help, CBF callback, std::vector<Option> options) :
-        Name(name), Help(help), Callback(callback), Options(options)
+    Command(const std::string& name, const std::string& help, CBF callback, CBF validation, std::vector<Option> options) :
+        Name(name), Help(help), Callback(callback), Validation(validation), Options(options)
     {}
 
     bool operator==(const std::string& rhs) {
@@ -138,6 +139,7 @@ struct Command
     std::string         Help;
     std::vector<Option> Options;
     CBF                 Callback;
+    CBF                 Validation;
 };
 
 // Displays contextual formatted help to the user.
@@ -185,7 +187,15 @@ int Help(char* toolName, std::vector<Command>& commands, State& state)
         std::cout << "------------" << std::endl;
         std::cout << "    Extracts all files and packages within the bundle at the input <bundle> name to the" << std::endl;
         std::cout << "    specified output <directory>. The output has the same directory structure " << std::endl;
-        std::cout << "    as the package. its packages will be unpacked in a directory named as the package full name" << std::endl;
+        std::cout << "    as the package. Its packages will be unpacked in a directory named as the package full name" << std::endl;
+        break;
+    case UserSpecified::Sign:
+        command = std::find(commands.begin(), commands.end(), "sign");
+        std::cout << "    " << toolName << " sign -p <package> [options] " << std::endl;
+        std::cout << std::endl;
+        std::cout << "Description:" << std::endl;
+        std::cout << "------------" << std::endl;
+        std::cout << "    Signs the input <package> in place." << std::endl;
         break;
     }
     std::cout << std::endl;
@@ -241,7 +251,7 @@ bool ParseInput(std::vector<Command>& commands, State& state, int argc, char* ar
             option = std::find(command->Options.begin(), command->Options.end(), argv[index]);
         }
     }
-    return state.Validate();
+    return command->Validation(state);
 }
 
 // Parses argc/argv input via commands into state, and calls into the 
@@ -269,6 +279,8 @@ int ParseAndRun(std::vector<Command>& commands, int argc, char* argv[])
             const_cast<char*>(state.packageName.c_str()),
             const_cast<char*>(state.directoryName.c_str())
         );
+    case UserSpecified::Sign:
+        return SignPackage(const_cast<char*>(state.packageName.c_str()));
     }
     return -1; // should never end up here.
 }
@@ -295,6 +307,7 @@ int main(int argc, char* argv[])
     std::vector<Command> commands = {
         {   Command("unpack", "Unpack files from a package to disk",
                 [](State& state) { return state.Specify(UserSpecified::Unpack); },
+                [](State& state) { return state.Validate(); },
             {   
                 Option("-p", true, "REQUIRED, specify input package name.",
                     [](State& state, const std::string& name) { return state.SetPackageName(name); }),
@@ -314,6 +327,7 @@ int main(int argc, char* argv[])
         },
         {   Command("unbundle", "Unpack files from a package to disk",
                 [](State& state) { return state.Specify(UserSpecified::Unbundle); },
+                [](State& state) { return state.Validate(); },
             {   
                 Option("-p", true, "REQUIRED, specify input package name.",
                     [](State& state, const std::string& name) { return state.SetPackageName(name); }),
@@ -335,8 +349,20 @@ int main(int argc, char* argv[])
                     [](State& state, const std::string&) { return false; })                
             })
         },
+        {
+            Command("sign", "Sign a package with the given certificate",
+                [](State& state) { return state.Specify(UserSpecified::Sign); },
+                [](State& state) { return !state.packageName.empty(); },
+            {
+                Option("-p", true, "REQUIRED, specify input package name.",
+                    [](State& state, const std::string& name) { return state.SetPackageName(name); }),
+                Option("-?", false, "Displays this help text.",
+                    [](State& state, const std::string&) { return false; })
+            })
+        },
         {   Command("-?", "Displays this help text.",
-                [](State& state) { return state.Specify(UserSpecified::Help);}, {})
+                [](State& state) { return state.Specify(UserSpecified::Help);},
+                [](State& state) { return true; }, {})
         },
     };
 

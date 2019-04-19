@@ -46,7 +46,7 @@ endif()
 if(CRYPTO_LIB MATCHES crypt32)
     message(STATUS "CRYPTO_LIB defined.  Using crypt32 library." )
     set(SHA256 PAL/SHA256/Win32/SHA256.cpp)
-    set(Signature PAL/Signature/Win32/SignatureValidator.cpp)
+    set(SignatureValidator PAL/Signature/Win32/SignatureValidator.cpp)
     add_definitions(-DUSING_CRYPT32=1)
 endif()
 
@@ -55,7 +55,9 @@ if(CRYPTO_LIB MATCHES openssl)
     if(OpenSSL_FOUND)
         message(STATUS "Using OpenSSL ${OpenSLL_VERSION}")
         set(SHA256    PAL/SHA256/OpenSSL/SHA256.cpp)
-        set(Signature PAL/Signature/OpenSSL/SignatureValidator.cpp)
+        set(SignatureValidator PAL/Signature/OpenSSL/SignatureValidator.cpp)
+        set(SignatureCreator PAL/Signature/OpenSSL/SignatureCreator.cpp)
+        set(SignatureShared PAL/Signature/OpenSSL/SharedOpenSSL.cpp)
     else()
         # ... and were done here...  :/
         message(STATUS "OpenSSL NOT FOUND!")
@@ -155,12 +157,14 @@ else()
     set(CompressionObject PAL/DataCompression/Zlib/CompressionObject.cpp)
 endif()
 
-message(STATUS "PAL: XML             = ${XmlParser}")
-message(STATUS "PAL: DirectoryObject = ${DirectoryObject}")
-message(STATUS "PAL: SHA256          = ${SHA256}")
-message(STATUS "PAL: Signature       = ${Signature}")
-message(STATUS "PAL: Applicability   = ${Applicability}")
-message(STATUS "PAL: Compression     = ${CompressionObject}")
+message(STATUS "PAL: XML                = ${XmlParser}")
+message(STATUS "PAL: DirectoryObject    = ${DirectoryObject}")
+message(STATUS "PAL: SHA256             = ${SHA256}")
+message(STATUS "PAL: SignatureValidator = ${SignatureValidator}")
+message(STATUS "PAL: SignatureCreator   = ${SignatureCreator}")
+message(STATUS "PAL: SignatureShared    = ${SignatureShared}")
+message(STATUS "PAL: Applicability      = ${Applicability}")
+message(STATUS "PAL: Compression        = ${CompressionObject}")
 
 include(msix_resources)
 
@@ -197,7 +201,9 @@ add_library(${PROJECT_NAME} SHARED
     ZipObject.cpp
     ${DirectoryObject}
     ${SHA256}
-    ${Signature}
+    ${SignatureValidator}
+    ${SignatureCreator}
+    ${SignatureShared}
     ${XmlParser}
     ${CompressionObject}
     ${InteropCpp}

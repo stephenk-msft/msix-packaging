@@ -13,78 +13,10 @@
 #include <sstream>
 #include <iostream>
 
-#include <openssl/err.h>
-#include <openssl/bio.h>
-#include <openssl/objects.h>
-#include <openssl/evp.h>
-#include <openssl/x509v3.h>
-#include <openssl/pkcs7.h>
-#include <openssl/pem.h>
-#include <openssl/crypto.h>
+#include "SharedOpenSSL.hpp"
 
 namespace MSIX
 {
-    const char* SPC_INDIRECT_DATA_OBJID = {"1.3.6.1.4.1.311.2.1.4"};
-
-    struct unique_BIO_deleter {
-        void operator()(BIO *b) const { if (b) BIO_free(b); };
-    };
-    
-    struct unique_PKCS7_deleter {
-        void operator()(PKCS7 *p) const { if (p) PKCS7_free(p); };
-    };
-
-    struct unique_X509_deleter {
-        void operator()(X509 *x) const { if (x) X509_free(x); };
-    };
-    
-    struct unique_X509_STORE_deleter {
-        void operator()(X509_STORE *xs) const { if (xs) X509_STORE_free(xs); };
-    };
-
-    struct unique_X509_STORE_CTX_deleter {
-        void operator()(X509_STORE_CTX *xsc) const { if (xsc) {X509_STORE_CTX_cleanup(xsc); X509_STORE_CTX_free(xsc);} };
-    };
-
-    struct unique_OPENSSL_string_deleter {
-        void operator()(char *os) const { if (os) OPENSSL_free(os); };
-    };
-
-    struct unique_STACK_X509_deleter {
-        void operator()(STACK_OF(X509) *sx) const { if (sx) sk_X509_free(sx); };
-    };
-
-    struct shared_BIO_deleter {
-        void operator()(BIO *b) const { if (b) BIO_free(b); };
-    };
-
-    typedef std::unique_ptr<BIO, unique_BIO_deleter> unique_BIO;
-    typedef std::unique_ptr<PKCS7, unique_PKCS7_deleter> unique_PKCS7;
-    typedef std::unique_ptr<X509, unique_X509_deleter> unique_X509;
-    typedef std::unique_ptr<X509_STORE, unique_X509_STORE_deleter> unique_X509_STORE;
-    typedef std::unique_ptr<X509_STORE_CTX, unique_X509_STORE_CTX_deleter> unique_X509_STORE_CTX;
-    typedef std::unique_ptr<char, unique_OPENSSL_string_deleter> unique_OPENSSL_string;
-    typedef std::unique_ptr<STACK_OF(X509), unique_STACK_X509_deleter> unique_STACK_X509;
-    
-    typedef struct Asn1Sequence
-    {
-        std::uint8_t tag;
-        std::uint8_t encoding;
-        union 
-        {   
-            struct {
-                std::uint8_t length;
-                std::uint8_t content;
-            } rle8;
-            struct {
-                std::uint8_t lengthHigh;
-                std::uint8_t lengthLow;
-                std::uint8_t content;
-            } rle16;
-            std::uint8_t content;
-        };
-    } Asn1Sequence;
-
     // Best effort to determine whether the signature file is associated with a store cert
     static bool IsStoreOrigin(std::uint8_t* signatureBuffer, std::uint32_t cbSignatureBuffer)
     {
@@ -146,6 +78,13 @@ namespace MSIX
             p7->d.sign->contents->d.other->value.asn1_string->length > sizeof(DigestHash)),
             "Signature origin check failed");
 
+        // TEST
+        char txt[1024] = {};
+        OBJ_obj2txt(txt, 1024, p7->d.sign->contents->type, 0);
+        std::cout << "TXT of p7->d.sign->contents: " << txt << std::endl;
+        std::cout << "NID of p7->d.sign->contents: " << OBJ_obj2nid(p7->d.sign->contents->type) << std::endl;
+        // TEST
+
         Asn1Sequence *asn1Sequence = reinterpret_cast<Asn1Sequence*>(p7->d.sign->contents->d.other->value.asn1_string->data);
         std::uint8_t* spcIndirectDataContent = nullptr;
         std::uint16_t spcIndirectDataContentSize = 0;
@@ -178,10 +117,12 @@ namespace MSIX
         unique_BIO bioMem(BIO_new_mem_buf(spcIndirectDataContent, spcIndirectDataContentSize));
         signatureDigest.swap(bioMem);
         
+        // TODO: We can potentially do better to decode the ASN1 and ensure that it's the correct SIP GUID and version
         // Scan through the spcIndirectData for the APPX header
         bool found = false;
         while (spcIndirectDataContent < spcIndirectDataContentEnd && !found)
         {
+            // TODO: Endianess concerns abound
             if (*reinterpret_cast<DigestName*>(spcIndirectDataContent) == DigestName::HEAD)
             {
                 found = true;
@@ -361,6 +302,16 @@ namespace MSIX
             sk_X509_push(trustedChain.get(), cert.get());
         }
 
+        // TEST HACK
+        MSIX::ComPtr<IStream> certStream;
+        ThrowHrIfFailed(CreateStreamOnFile(R"(C:\Temp\evernotesup\cert.cer)", true, &certStream));
+        auto certBytes = Helper::CreateBufferFromStream(certStream);
+        
+        unique_BIO certBIO{ BIO_new_mem_buf(certBytes.data(), certBytes.size()) };
+        unique_X509 cert{ d2i_X509_bio(certBIO.get(), nullptr) };
+        sk_X509_push(trustedChain.get(), cert.get());
+        // END TEST HACK
+
         unique_BIO signatureDigest(nullptr);
         ReadDigestHashes(p7.get(), signatureObject, signatureDigest);
         
@@ -386,11 +337,10 @@ namespace MSIX
                         X509_verify_cert(context.get()) == 1, 
                         "Could not verify cert");
             }
-
-            ThrowErrorIfNot(Error::SignatureInvalid, 
-                PKCS7_verify(p7.get(), trustedChain.get(), store.get(), signatureDigest.get(), nullptr/*out*/, PKCS7_NOCRL/*flags*/) == 1, 
-                "Could not verify package signature");
         }
+
+        CheckOpenSSLErr(
+            PKCS7_verify(p7.get(), trustedChain.get(), store.get(), signatureDigest.get(), nullptr/*out*/, PKCS7_NOVERIFY | PKCS7_NOCRL/*flags*/));
 
         origin = MSIX::SignatureOrigin::Unknown;
         if (IsStoreOrigin(p7s.data(), p7s.size())) { origin = MSIX::SignatureOrigin::Store; }

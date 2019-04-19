@@ -251,6 +251,7 @@ list(APPEND XSRC
 
     ${CRYPTO}/ocsp/ocsp_asn.c
     ${CRYPTO}/ocsp/ocsp_cl.c
+    ${CRYPTO}/ocsp/ocsp_err.c
     ${CRYPTO}/ocsp/ocsp_ht.c
     ${CRYPTO}/ocsp/ocsp_lib.c
 
@@ -417,6 +418,24 @@ else()
     ${CRYPTO}/rand/rand_unix.c
     )
 endif()
+
+# Added for DES support
+list(APPEND XSRC
+${CRYPTO}/evp/e_des.c
+${CRYPTO}/evp/e_des3.c
+${CRYPTO}/evp/e_xcbc_d.c
+${CRYPTO}/des/ncbc_enc.c
+${CRYPTO}/des/cfb_enc.c
+${CRYPTO}/des/ecb_enc.c
+${CRYPTO}/des/cfb64enc.c
+${CRYPTO}/des/cfb64ede.c
+${CRYPTO}/des/ofb64enc.c
+${CRYPTO}/des/ofb64ede.c
+${CRYPTO}/des/ecb3_enc.c
+${CRYPTO}/des/des_enc.c
+${CRYPTO}/des/xcbc_enc.c
+${CRYPTO}/des/set_key.c
+)
 
 ###########################################################################################
 # INC

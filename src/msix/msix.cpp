@@ -14,6 +14,7 @@
 #include "AppxPackageObject.hpp"
 #include "AppxFactory.hpp"
 #include "Log.hpp"
+#include "SignatureCreator.hpp"
 
 #include <string>
 #include <memory>
@@ -153,6 +154,35 @@ MSIX_API HRESULT STDMETHODCALLTYPE UnpackBundleFromStream(
 #else
     return static_cast<HRESULT>(MSIX::Error::NotSupported);
 #endif
+} CATCH_RETURN();
+
+
+MSIX_API HRESULT STDMETHODCALLTYPE SignPackage(
+    char* utf8SourcePackage) noexcept try
+{
+    ThrowErrorIfNot(MSIX::Error::InvalidParameter,
+        (utf8SourcePackage != nullptr),
+        "Invalid parameters"
+    );
+
+    // TODO: Allow specifying that we don't want to validate the manifest (obviously signature validation will always be skipped here)
+    //       Can probably take in a full option and or/and our way to ensure no signature validation
+    MSIX_VALIDATION_OPTION signingValidationOptions = static_cast<MSIX_VALIDATION_OPTION>(MSIX_VALIDATION_OPTION_SKIPSIGNATURE | MSIX_VALIDATION_OPTION_SKIPAPPXMANIFEST);
+
+    MSIX::ComPtr<IAppxFactory> factory;
+    // We don't need to use the caller's heap here because we're not marshalling any strings
+    // out to the caller.  So default to new / delete[] and be done with it!
+    ThrowHrIfFailed(CoCreateAppxFactoryWithHeap(InternalAllocate, InternalFree, signingValidationOptions, &factory));
+
+    MSIX::ComPtr<IStream> stream;
+    ThrowHrIfFailed(CreateStreamOnFile(utf8SourcePackage, true, &stream));
+
+    MSIX::ComPtr<IAppxPackageReader> reader;
+    ThrowHrIfFailed(factory->CreatePackageReader(stream.Get(), &reader));
+
+    MSIX::SignatureCreator::Create(reader.Get());
+
+    return static_cast<HRESULT>(MSIX::Error::OK);
 } CATCH_RETURN();
 
 MSIX_API HRESULT STDMETHODCALLTYPE GetLogTextUTF8(COTASKMEMALLOC* memalloc, char** logText) noexcept try
