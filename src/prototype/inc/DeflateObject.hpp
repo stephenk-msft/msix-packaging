@@ -38,14 +38,18 @@ public:
     // Z_FINISH        4
     // Z_BLOCK         5
     // Z_TREES         6
-    std::vector<std::uint8_t> Deflate()
+    std::vector<std::uint8_t> Deflate(int disposition = Z_FULL_FLUSH)
     {
         std::vector<std::uint8_t> compressedBuffer;
         std::vector<std::uint8_t> deflateBuffer(1024);
         do
         {
             SetOutput(deflateBuffer.data(), deflateBuffer.size());
-            auto result = deflate(&m_zstrm, Z_FULL_FLUSH);
+            auto result = deflate(&m_zstrm, disposition);
+            if (disposition == Z_FINISH && result == Z_STREAM_END)
+            {
+                result = Z_OK;
+            }
             ThrowIf(result != Z_OK, "zlib error");
             auto have = deflateBuffer.size() - GetAvailableDestinationSize();
             compressedBuffer.insert(compressedBuffer.end(), deflateBuffer.data(), deflateBuffer.data() + have);

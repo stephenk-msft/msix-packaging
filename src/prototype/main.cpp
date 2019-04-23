@@ -20,6 +20,8 @@
 typedef struct Block
 {
     std::vector<std::uint8_t> block;
+    // If empty, don't add to blockmap.
+    // Only the last block should meet this, as it should be the [0x03, 0x00] stream termination, not real data.
     std::string base64Encoded;
 } BlockAndHash;
 
@@ -114,8 +116,11 @@ private:
 
             m_zipObject->WriteBuffer(block->block);
 
-            auto size = (isCompressed) ? block->block.size() : 0;
-            m_blockMapWriter->AddBlockToElement(*fileElement, block->base64Encoded, size);
+            if (!block->base64Encoded.empty())
+            {
+                auto size = (isCompressed) ? block->block.size() : 0;
+                m_blockMapWriter->AddBlockToElement(*fileElement, block->base64Encoded, size);
+            }
         }
         m_zipObject->WriteCdh(*lfh, payloadFile.crc, sizeOfBlocks, payloadFile.uncompressedSize);
     }
@@ -202,6 +207,23 @@ private:
             blockData->base64Encoded = base64Encoded;
             payloadFile->fileBlocks.push_back(std::move(blockData));
         }
+
+        if (payloadFile->compressionOption == APPX_COMPRESSION_OPTION_NORMAL)
+        {
+            // Put the stream termination on
+            std::vector<std::uint8_t> buffer;
+
+            DeflateObject deflateObj;
+            // maybe make this into one call?
+            deflateObj.SetInput(buffer.data(), buffer.size());
+            auto compressedBuffer = deflateObj.Deflate(Z_FINISH);
+            buffer.swap(compressedBuffer);
+
+            blockData.reset(new (std::nothrow) Block());
+            blockData->block = std::move(buffer);
+            payloadFile->fileBlocks.push_back(std::move(blockData));
+        }
+
         payloadFile->crc = crc;
         if (isManifest)
         {
