@@ -1,17 +1,18 @@
+# MSIX\test\msixtest
 # Copyright (C) 2017 Microsoft.  All rights reserved.
 # See LICENSE file in the project root for full license information.
 
 cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
-project (BundleSample)
+project (msixtest)
 
 if(WIN32)
-    set(DESCRIPTION "BundleSample manifest")
+    set(DESCRIPTION "msixtest manifest")
     configure_file(${CMAKE_PROJECT_ROOT}/manifest.cmakein ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.exe.manifest CRLF)
     set(MANIFEST ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.exe.manifest)
 endif()
 
 add_executable(${PROJECT_NAME}
-    BundleSample.cpp
+    main.cpp
     ${MANIFEST}
     )
 

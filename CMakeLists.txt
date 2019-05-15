@@ -235,8 +235,6 @@ if((MACOS) OR (IOS))
     endif()
 endif()
 
-enable_testing() # needed on top-level CMakeLists.txt
-
 # CMake useful variables
 set(CMAKE_PROJECT_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
@@ -263,6 +261,4 @@ ADD_DEPENDENCIES(SRC LIBS)
 message(STATUS "dependencies added")
 add_subdirectory(sample)
 message(STATUS "sample processed")
-add_subdirectory(test)
-message(STATUS "tests processed")
 message(STATUS "DONE!")
