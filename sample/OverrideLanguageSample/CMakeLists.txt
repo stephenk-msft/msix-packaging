@@ -5,9 +5,10 @@ cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
 project (OverrideLanguageSample)
 
 if(WIN32)
+    message(STATUS "manifest de ${PROJECT_NAME}")
     set(DESCRIPTION "OverrideLanguageSample manifest")
-    configure_file(${CMAKE_PROJECT_ROOT}/manifest.cmakein ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.exe.manifest CRLF)
-    set(MANIFEST ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.exe.manifest)
+    configure_file(${CMAKE_PROJECT_ROOT}/manifest.cmakein ${MSIX_SAMPLE_OUTPUT_DIRECTORY}/${PROJECT_NAME}.exe.manifest CRLF)
+    set(MANIFEST ${MSIX_SAMPLE_OUTPUT_DIRECTORY}/${PROJECT_NAME}.exe.manifest)
 endif()
 
 add_executable(${PROJECT_NAME}
@@ -17,8 +18,15 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src/msix)
 
-add_dependencies(${PROJECT_NAME} msix)
 if (LINUX OR AOSP)
     target_link_libraries(${PROJECT_NAME} PRIVATE -latomic)
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE msix)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${MSIX_SAMPLE_OUTPUT_DIRECTORY}"
+  LIBRARY_OUTPUT_DIRECTORY "${MSIX_SAMPLE_OUTPUT_DIRECTORY}"
+  RUNTIME_OUTPUT_DIRECTORY "${MSIX_SAMPLE_OUTPUT_DIRECTORY}"
+)
+
+add_dependencies(${PROJECT_NAME} msix)
