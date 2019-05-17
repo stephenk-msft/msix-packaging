@@ -18,7 +18,7 @@ std::string GetUnpackTestPackageLocation(const char* package)
 void RunUnpackTest(HRESULT expected, const char* package, MSIX_VALIDATION_OPTION option, bool clean = true)
 {
     std::cout << "Testing: " << std::endl;
-    std::cout << "\tPackage: " << package << std::endl; 
+    std::cout << "\tPackage:\t" << package << std::endl; 
 
     auto packagePath = GetUnpackTestPackageLocation(package);
 

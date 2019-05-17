@@ -1,7 +1,7 @@
 //
 //  Copyright (C) 2019 Microsoft.  All rights reserved.
 //  See LICENSE file in the project root for full license information.
-// 
+//
 #include "msixtest.hpp"
 #include "catch.hpp"
 
@@ -70,7 +70,7 @@ namespace MsixTest {
                         return false;
                     }
                 }
-                else 
+                else
                 {
                     if (!DeleteFile(file.c_str()))
                     {
@@ -80,7 +80,10 @@ namespace MsixTest {
                 return true;
             };
 
-            WalkDirectory(dirUtf16, lambda);
+            if(!WalkDirectory(dirUtf16, lambda))
+            {
+                return false;
+            }
 
             if (!RemoveDirectory(dirUtf16.c_str()))
             {
@@ -93,29 +96,31 @@ namespace MsixTest {
         bool CompareDirectory(const std::string& directory, const std::map<std::string, std::uint64_t>& files)
         {
             auto dirUtf16 = String::utf8_to_utf16(directory);
-            std::map<std::string, std::uint64_t> filesCopy(files);
+            auto filesCopy(files);
 
             auto lambda = [&filesCopy](const std::wstring& wfile, PWIN32_FIND_DATA fileData)
             {
                 if (fileData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) { return true; }
 
                 auto file = String::utf16_to_utf8(wfile);
-                file = file.substr(file.find_first_of("\\") + 1); // remove root directory
-                std::replace(file.begin(), file.end(), '\\', '/'); // replace windows separator
+                file = file.substr(file.find_first_of("\\") + 1); // Remove root directory
+                std::replace(file.begin(), file.end(), '\\', '/'); // Replace windows separator
 
                 auto find = filesCopy.find(file);
                 if (find == filesCopy.end())
                 {
-                    std::cout << "File: "  << file << " doesn't exists in expected map." << std::endl;
+                    std::cout << "File: " << file << " doesn't exists in expected files." << std::endl;
                     return false;
                 }
+
+                // Get size
                 ULARGE_INTEGER fileSize;
                 fileSize.HighPart = fileData->nFileSizeHigh;
                 fileSize.LowPart = fileData->nFileSizeLow;
                 std::uint64_t size = static_cast<std::uint64_t>(fileSize.QuadPart);
                 if (find->second != size)
                 {
-                    std::cout << "File: "  << file << " wrong size. Expected: " << find->second << " Got: " << size << std::endl;
+                    std::cout << "File: " << file << " wrong size. Expected: " << find->second << " Got: " << size << std::endl;
                     return false;
                 }
                 filesCopy.erase(find);
@@ -127,11 +132,11 @@ namespace MsixTest {
                 return false;
             }
 
-            // if the map is empty, then all the files are located
+            // If the map is empty, then all the files are located
             return filesCopy.empty();
         }
 
-        // Converts path to windows speparator
+        // Converts path to windows separator
         std::string PathAsCurrentPlatform(std::string& path)
         {
             std::string result(path);
