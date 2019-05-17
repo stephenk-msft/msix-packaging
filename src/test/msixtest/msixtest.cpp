@@ -11,7 +11,7 @@
 #include <locale>
 #include <codecvt>
 
-namespace MsixTest { namespace Helpers {
+namespace MsixTest {
 
     namespace Allocators
     {
@@ -42,9 +42,10 @@ namespace MsixTest { namespace Helpers {
     namespace Log {
         void PrintMsixLog(HRESULT expect, HRESULT result)
         {
+            std::cout << "\tExpect: " << std::hex << expect << ", Got: " << result << std::endl;
             if (result != S_OK)
             {
-                std::cout << "Error: " << std::hex << result << std::endl;
+                std::cout << "\tError: " << std::hex << result << std::endl;
                 String::Text<char> text;
                 auto logResult = GetLogTextUTF8(Allocators::Allocate, &text);
                 if (0 == logResult)
@@ -56,11 +57,11 @@ namespace MsixTest { namespace Helpers {
                     std::cout << "UNABLE TO GET LOG WITH HR=" << std::hex << logResult << std::endl;
                 }
             }
-            std::cout << "expect: " << std::hex << expect << ", got: " << result << std::endl;
+            std::cout << std::string(CATCH_CONFIG_CONSOLE_WIDTH, '-') << std::endl;
         }
     }
 
-} } // MsixTest::Helpers
+}
 
 int msixtest_main(int argc, char* argv[])
 {

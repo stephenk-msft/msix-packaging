@@ -10,22 +10,21 @@
 #include <string>
 #include <iostream>
 
-namespace MsixTest { namespace Helpers {
+namespace MsixTest {
 
     namespace Directory {
 
-        // best effort to clean the directory.
-        template<>
-        bool CleanDirectory(const std::wstring& path)
+        template <class Lambda>
+        bool WalkDirectory(const std::wstring& path, Lambda& visitor)
         {
             static std::wstring dot(L".");
             static std::wstring dotdot(L"..");
 
             auto directory = path + L"\\*";
 
-            WIN32_FIND_DATA findFileData = {};
+            WIN32_FIND_DATA fileData = {};
             std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::FindClose)> handle(
-                FindFirstFile(reinterpret_cast<LPCWSTR>(directory.c_str()), &findFileData),
+                FindFirstFile(reinterpret_cast<LPCWSTR>(directory.c_str()), &fileData),
                 &FindClose);
 
             if (handle.get() == INVALID_HANDLE_VALUE)
@@ -35,30 +34,101 @@ namespace MsixTest { namespace Helpers {
 
             do
             {
-                auto file = std::wstring(findFileData.cFileName);
-                auto toDel = path + L"\\" + file;
-                if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                auto name = std::wstring(fileData.cFileName);
+                if (dot != name && dotdot != name)
                 {
-                    if (dot != file && dotdot != file)
+                    auto newPath = path + L"\\" + name;
+                    if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                     {
-                        CleanDirectory(toDel);
+                        if(!WalkDirectory(newPath, visitor))
+                        {
+                            return false;
+                        }
                     }
-                }
-                else
-                {
-                    if (!DeleteFile(toDel.c_str()))
+
+                    if (!visitor(newPath, &fileData))
                     {
                         return false;
                     }
                 }
-            } while(FindNextFile(handle.get(), &findFileData));
+            } while(FindNextFile(handle.get(), &fileData));
 
-            if (!RemoveDirectory(path.c_str()))
+            return true;
+        }
+
+        // best effort to clean the directory.
+        bool CleanDirectory(const std::string& directory)
+        {
+            auto dirUtf16 = String::utf8_to_utf16(directory);
+
+            auto lambda = [](const std::wstring& file, PWIN32_FIND_DATA fileData)
+            {
+                if (fileData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
+                    if (!RemoveDirectory(file.c_str()))
+                    {
+                        return false;
+                    }
+                }
+                else 
+                {
+                    if (!DeleteFile(file.c_str()))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            WalkDirectory(dirUtf16, lambda);
+
+            if (!RemoveDirectory(dirUtf16.c_str()))
             {
                 return false;
             }
 
             return true;
+        }
+
+        bool CompareDirectory(const std::string& directory, const std::map<std::string, std::uint64_t>& files)
+        {
+            auto dirUtf16 = String::utf8_to_utf16(directory);
+            std::map<std::string, std::uint64_t> filesCopy(files);
+
+            auto lambda = [&filesCopy](const std::wstring& wfile, PWIN32_FIND_DATA fileData)
+            {
+                if (fileData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) { return true; }
+
+                auto file = String::utf16_to_utf8(wfile);
+                file = file.substr(file.find_first_of("\\") + 1); // remove root directory
+                std::replace(file.begin(), file.end(), '\\', '/'); // replace windows separator
+
+                auto find = filesCopy.find(file);
+                if (find == filesCopy.end())
+                {
+                    std::cout << "File: "  << file << " doesn't exists in expected map." << std::endl;
+                    return false;
+                }
+                ULARGE_INTEGER fileSize;
+                fileSize.HighPart = fileData->nFileSizeHigh;
+                fileSize.LowPart = fileData->nFileSizeLow;
+                std::uint64_t size = static_cast<std::uint64_t>(fileSize.QuadPart);
+                if (find->second != size)
+                {
+                    std::cout << "File: "  << file << " wrong size. Expected: " << find->second << " Got: " << size << std::endl;
+                    return false;
+                }
+                filesCopy.erase(find);
+                return true;
+            };
+
+            if(!WalkDirectory(dirUtf16, lambda))
+            {
+                return false;
+            }
+
+            // if the map is empty, then all the files are located
+            return filesCopy.empty();
         }
 
         // Converts path to windows speparator
@@ -69,4 +139,4 @@ namespace MsixTest { namespace Helpers {
             return result;
         }
     }
-} } // MsixTest::Helpers
+}

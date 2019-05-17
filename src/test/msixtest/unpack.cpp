@@ -4,36 +4,36 @@
 // 
 #include "msixtest.hpp"
 #include "catch.hpp"
+#include "unpack_testdata.hpp"
 
 #include <iostream>
-
-using namespace MsixTest::Helpers;
-
-static const std::wstring outputDirectoryUtf16 = String::utf8_to_utf16(TestData::OutputDirectory);
 
 // Returns full relative path of the package with respect to the test
 std::string GetUnpackTestPackageLocation(const char* package)
 {
-    std::string path = TestData::Unpack + std::string(package);
-    return Directory::PathAsCurrentPlatform(path);
+    std::string path = MsixTest::TestData::Unpack + std::string(package);
+    return MsixTest::Directory::PathAsCurrentPlatform(path);
 }
 
 void RunUnpackTest(HRESULT expected, const char* package, MSIX_VALIDATION_OPTION option, bool clean = true)
 {
+    std::cout << "Testing: " << std::endl;
+    std::cout << "\tPackage: " << package << std::endl; 
+
     auto packagePath = GetUnpackTestPackageLocation(package);
 
     HRESULT actual = UnpackPackage(MSIX_PACKUNPACK_OPTION_NONE,
                                    option,
                                    const_cast<char*>(packagePath.c_str()),
-                                   const_cast<char*>(TestData::OutputDirectory));
+                                   const_cast<char*>(MsixTest::TestData::OutputDirectory));
 
     CHECK(expected == actual);
-    Log::PrintMsixLog(expected, actual);
+    MsixTest::Log::PrintMsixLog(expected, actual);
 
     // clean directory if succeeded and requested
     if (actual == S_OK && clean)
     {
-        CHECK_NOFAIL(Directory::CleanDirectory(outputDirectoryUtf16));
+        CHECK_NOFAIL(MsixTest::Directory::CleanDirectory(MsixTest::TestData::OutputDirectory));
     }
 }
 
@@ -44,9 +44,14 @@ TEST_CASE("Unpack_StoreSigned_Desktop_x64_MoviesTV", "[unpack]")
     const char* package           = "StoreSigned_Desktop_x64_MoviesTV.appx";
     MSIX_VALIDATION_OPTION option = MSIX_VALIDATION_OPTION_FULL;
 
-    RunUnpackTest(expected, package, option);
+    RunUnpackTest(expected, package, option, false);
 
-    // TODO: not delete the directory and verify files.
+    // Compare that all the files extracted on disk are correct
+    auto files = MsixTest::Unpack::GetExpectedFiles();
+    CHECK(MsixTest::Directory::CompareDirectory(MsixTest::TestData::OutputDirectory, files));
+
+    // Clean directory
+    CHECK_NOFAIL(MsixTest::Directory::CleanDirectory(MsixTest::TestData::OutputDirectory));
 }
 
 TEST_CASE("Unpack_Empty", "[unpack]")
@@ -150,7 +155,7 @@ TEST_CASE("Unpack_TestAppxPackage_x64", "[unpack]")
 
 TEST_CASE("Unpack_UnsignedZip64WithCI-APPX_E_MISSING_REQUIRED_FILE", "[unpack]")
 {
-    HRESULT expected = 0x8bad0012;
+    HRESULT expected = 0x8bad0012; // TODO: change this to 0x8bad0031 when merge with packaging
     const char* package = "UnsignedZip64WithCI-APPX_E_MISSING_REQUIRED_FILE.appx";
     MSIX_VALIDATION_OPTION option = MSIX_VALIDATION_OPTION_FULL;
 

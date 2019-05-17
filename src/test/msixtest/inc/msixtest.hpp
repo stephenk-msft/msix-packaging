@@ -6,8 +6,9 @@
 #include "MSIXWindows.hpp"
 
 #include <string>
+#include <map>
 
-namespace MsixTest { namespace Helpers {
+namespace MsixTest {
 
     // relative location of test data according build directory
     namespace TestData
@@ -24,8 +25,9 @@ namespace MsixTest { namespace Helpers {
 
     namespace Directory
     {
-        template<typename T>
-        bool CleanDirectory(const T& subPath);
+        bool CleanDirectory(const std::string& directory);
+        bool CompareDirectory(const std::string& directory, const std::map<std::string, std::uint64_t>& files);
+
         std::string PathAsCurrentPlatform(std::string& path);
     }
 
@@ -54,7 +56,7 @@ namespace MsixTest { namespace Helpers {
         void PrintMsixLog(HRESULT actual, HRESULT result);
     }
 
-} } // MsixTest::Helpers
+}
  
 // This is our entrypoint.
 int msixtest_main(int argc, char* argv[]);
