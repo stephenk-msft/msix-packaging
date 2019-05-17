@@ -36,9 +36,9 @@ namespace MsixTest {
                     std::string newPath = path + "/" + name;
                     if (entry->d_type == DT_DIR)
                     {
-                        WalkDirectory(path, visitor);
+                        WalkDirectory(newPath, visitor);
                     }
-                    if (!visitor(path, entry))
+                    if (!visitor(newPath, entry))
                     {
                         return false;
                     }
@@ -82,9 +82,9 @@ namespace MsixTest {
 
                 // Get size
                 struct stat sb;
-                if (stat(file.c_str(), &sb) == -1)
+                if (stat(path.c_str(), &sb) == -1)
                 {
-                    std::cout << "File: " << file << "stat call failed with " << std::to_string(errno) << std::endl;
+                    std::cout << "File: " << file << " stat call failed with " << std::to_string(errno) << std::endl;
                     return false;
                 }
                 std::uint64_t size = static_cast<std::uint64_t>(sb.st_size);

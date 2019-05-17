@@ -31,7 +31,7 @@ void RunUnpackTest(HRESULT expected, const char* package, MSIX_VALIDATION_OPTION
     MsixTest::Log::PrintMsixLog(expected, actual);
 
     // clean directory if succeeded and requested
-    if (actual == S_OK && clean)
+    if ((actual == S_OK) && clean)
     {
         CHECK_NOFAIL(MsixTest::Directory::CleanDirectory(MsixTest::TestData::OutputDirectory));
     }
