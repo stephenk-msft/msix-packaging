@@ -3,9 +3,6 @@
 
 cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
 
-# Output sample binaries into a samples directory
-set(MSIX_SAMPLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/samples")
-
 add_subdirectory(ExtractContentsSample)
 add_subdirectory(BundleSample)
 add_subdirectory(OverrideStreamSample)
