@@ -11,9 +11,7 @@
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
 
-#include "MobileTests.hpp"
-#include "MSIXWindows.hpp"
-#include "ApiTests.hpp"
+#include "msixtest.hpp"
 
 std::string GetStringPathFromJString(JNIEnv* env, jstring jFilePath)
 {
@@ -21,16 +19,19 @@ std::string GetStringPathFromJString(JNIEnv* env, jstring jFilePath)
     return  path  + "/" ;
 }
 
-// Assets are not unpacked from the APK. Retrieve them and copy them for our test to read.
-void CopyFilesFromAssets(JNIEnv* env, jobject assetManager, std::string filePath, std::string subDirectory)
+void CreateSubDirectory(const std::string& path)
 {
-    // Create subdirectory if needed
-    if (!subDirectory.empty())
-    {   std::string path = filePath + subDirectory;
-        if (-1 == mkdir(path.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) && errno != EEXIST)
-        {   __android_log_print(ANDROID_LOG_ERROR, "MSIX", "Error creating directory: %s", strerror(errno));
-        }
+    if (-1 == mkdir(path.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) && errno != EEXIST)
+    {
+        __android_log_print(ANDROID_LOG_ERROR, "MSIX", "Error creating directory: %s with %s", path.c_str(), strerror(errno));
     }
+}
+
+// Assets are not unpacked from the APK. Retrieve them and copy them for our test to read.
+void CopyFilesFromAssets(JNIEnv* env, jobject assetManager, std::string filePath, const std::string& subDirectory)
+{
+    __android_log_print(ANDROID_LOG_INFO, "MSIX", "Start: %s", subDirectory.c_str());
+    CreateSubDirectory(filePath + subDirectory);
 
     AAssetManager* manager = AAssetManager_fromJava(env, assetManager);
     AAssetDir* assetDir = AAssetManager_openDir(manager, subDirectory.c_str());
@@ -66,6 +67,7 @@ void CopyFilesFromAssets(JNIEnv* env, jobject assetManager, std::string filePath
         AAsset_close(asset);
     }
     AAssetDir_close(assetDir);
+    __android_log_print(ANDROID_LOG_INFO, "MSIX", "End: %s", subDirectory.c_str());
 }
 
 extern "C"
@@ -75,16 +77,24 @@ JNICALL
 Java_com_microsoft_androidbvt_MainActivity_RunTests(JNIEnv* env, jobject /* this */,
                                                           jobject assetManager, jstring jFilePath)
 {
-    std::string output = "";
     std::string filePath = GetStringPathFromJString(env, jFilePath);
-    CopyFilesFromAssets(env, assetManager, filePath, "");
-    CopyFilesFromAssets(env, assetManager, filePath, "BlockMap");
-    CopyFilesFromAssets(env, assetManager, filePath, "bundles");
-    CopyFilesFromAssets(env, assetManager, filePath, "flat");
-    CopyFilesFromAssets(env, assetManager, filePath, "महसुस");
-    signed long hr = RunTests(const_cast<char*>(filePath.c_str()), const_cast<char*>(filePath.c_str()));
-    output += "End-to-end tests: ";
-    if (hr == 0)
+
+    // Create top level subdirectory
+    CreateSubDirectory(filePath + "testData");
+
+    CopyFilesFromAssets(env, assetManager, filePath, "testData/unpack");
+    CopyFilesFromAssets(env, assetManager, filePath, "testData/unpack/BlockMap");
+    CopyFilesFromAssets(env, assetManager, filePath, "testData/unpack/bundles");
+    CopyFilesFromAssets(env, assetManager, filePath, "testData/unpack/flat");
+    CopyFilesFromAssets(env, assetManager, filePath, "testData/unpack/महसुस");
+
+    std::string outputFile = filePath + "TEST-MsixSDK-AOSP.xml";
+    filePath = filePath.substr(0, filePath.size() - 1);
+
+    char* arguments [6] = { "msix_test", "-s", "-r", "junit" , "-o", const_cast<char*>(outputFile.c_str()) };
+    int result = msixtest_main(6, arguments, filePath.c_str());
+    std::string output = "End-to-end tests: ";
+    if (result == 0)
     {
         output += "PASSED\n";
     }
@@ -92,16 +102,6 @@ Java_com_microsoft_androidbvt_MainActivity_RunTests(JNIEnv* env, jobject /* this
     {
         output += "FAILED\n";
     }
-    std::string input = filePath + "apitest_test_1.txt";
-    int apiResult = RunApiTest(const_cast<char*>(input.c_str()), const_cast<char*>(filePath.c_str()), const_cast<char*>(filePath.c_str()));
-    output += "Api tests: ";
-    if (apiResult == 0)
-    {
-        output += "PASSED\n";
-    }
-    else
-    {
-        output += "FAILED\n";
-    }
+
     return env->NewStringUTF(output.c_str());
 }

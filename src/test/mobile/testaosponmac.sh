@@ -5,13 +5,14 @@ projectdir=`pwd`
 emulatorName="msix_android_emulator"
 avdPackage=""
 install=0
+outputFile=TEST-MsixSDK-AOSP.xml
 
 usage()
 {
     echo "usage: ./testaosponmac [-avd <emulator name>] [-c <package> [-i]]"
     echo $'\t' "-avd <emulator name>. Name of avd. Default msix_android_emulator"
     echo $'\t' "-c <package>. Create avd with specified package with the name defined by -adv. If not present assume the emulator already exits"
-    echo $'\t' "-i . Only used with -c Install the package specified on c"
+    echo $'\t' "-i . Only used with -c Installs the package specified on c"
 }
 
 while [ "$1" != "" ]; do
@@ -33,7 +34,7 @@ while [ "$1" != "" ]; do
     shift
 done
 
-function ParseResult {
+function PrintFile {
     local FILE="$1"
     if [ ! -f $FILE ]
     then
@@ -41,13 +42,6 @@ function ParseResult {
         exit 1
     fi
     cat $FILE
-    if grep -q "FAILED" $FILE
-    then
-        echo "FAILED"
-        testfailed=1
-    else
-        echo "succeeded"
-    fi
 }
 
 function TerminateEmulator {
@@ -55,8 +49,7 @@ function TerminateEmulator {
 }
 
 # Clean up local result files if necesarry
-rm -f testResults.txt
-rm -f testApiResults.txt
+rm -f $outputFile
 
 # Create emulator if requested
 if [ -n "$avdPackage" ]; then
@@ -77,15 +70,18 @@ $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sy
 $ANDROID_HOME/platform-tools/adb devices
 echo "Emulator started"
 
-# Create App
-cd $projectdir/../mobile/AndroidBVT
+# Create App and copy resources and shared libraries.
+cd $projectdir/AndroidBVT
+# We always assume that .vs is the output dir. TODO: change if that assumptions isn't true
+bindir=$projectdir/../../../.vs
 mkdir -p app/src/main/assets
-cp -R $projectdir/../appx/* app/src/main/assets
-cp $projectdir/../../.vs/test/api/input/apitest_test_1.txt app/src/main/assets
+cp -R $projectdir/../testData app/src/main/assets
 mkdir -p app/src/main/jniLibs/x86
-cp $projectdir/../../.vs/lib/libmsix.so app/src/main/jniLibs/x86
+cp $bindir/lib/libmsix.so app/src/main/jniLibs/x86
+cp $bindir/msixtest/libmsixtest.so app/src/main/jniLibs/x86
 mkdir -p app/src/main/libs
-cp $projectdir/../../.vs/lib/msix-jni.jar app/src/main/libs
+cp $bindir/lib/msix-jni.jar app/src/main/libs
+cp $projectdir/../msixtest/inc/msixtest.hpp app/src/main/cpp/msixtest.hpp
 
 rm -rf build app/build
 sh ./gradlew assembleDebug
@@ -94,8 +90,7 @@ sh ./gradlew assembleDebug
 $ANDROID_HOME/platform-tools/adb install -t -r app/build/outputs/apk/debug/app-debug.apk
 
 # Clean up.test results in emulator if necesarry
-$ANDROID_HOME/platform-tools/adb shell "run-as com.microsoft.androidbvt rm -rf /data/data/com.microsoft.androidbvt/files/testResults.txt"
-$ANDROID_HOME/platform-tools/adb shell "run-as com.microsoft.androidbvt rm -rf /data/data/com.microsoft.androidbvt/files/testApiResults.txt"
+$ANDROID_HOME/platform-tools/adb shell "run-as com.microsoft.androidbvt rm -rf /data/data/com.microsoft.androidbvt/files/TEST-MsixSDK-AOSP.xml"
 
 # Start app
 $ANDROID_HOME/platform-tools/adb shell am start -n com.microsoft.androidbvt/.MainActivity
@@ -128,20 +123,8 @@ done
 cd $projectdir
 
 # Get Results
-$ANDROID_HOME/platform-tools/adb shell "run-as com.microsoft.androidbvt cat /data/data/com.microsoft.androidbvt/files/testResults.txt" > testResults.txt
-$ANDROID_HOME/platform-tools/adb shell "run-as com.microsoft.androidbvt cat /data/data/com.microsoft.androidbvt/files/testApiResults.txt" > testApiResults.txt
+$ANDROID_HOME/platform-tools/adb shell "run-as com.microsoft.androidbvt cat /data/data/com.microsoft.androidbvt/files/TEST-MsixSDK-AOSP.xml" > $outputFile
 
 TerminateEmulator
 
-ParseResult testResults.txt
-ParseResult testApiResults.txt
-
-echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="
-if [ $testfailed -ne 0 ]
-then
-    echo "                           FAILED                                 "
-    exit $testfailed
-else
-    echo "                           passed                                 "
-    exit 0
-fi
+PrintFile $outputFile

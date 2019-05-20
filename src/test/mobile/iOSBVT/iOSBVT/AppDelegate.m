@@ -26,7 +26,7 @@
 
     // msixtests
     // Simulate commnad arguments: "msixtest -s -r junit -o tmp/TEST-MsixSDK-iOS.xml"
-    char *arguments[6] = { "msix_test", "-s", "-r", "junit" , "-o", "tmp/TEST-MsixSDK-iOS.xml" };
+    char* arguments[6] = { "msix_test", "-s", "-r", "junit" , "-o", "tmp/TEST-MsixSDK-iOS.xml" };
     // Use full commands for testing
     //char *arguments[2] = { "msix_test", "-l" };
     int result = msixtest_main(6, arguments, testDataPath);
