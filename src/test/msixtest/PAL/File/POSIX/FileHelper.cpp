@@ -2,7 +2,7 @@
 //  Copyright (C) 2019 Microsoft.  All rights reserved.
 //  See LICENSE file in the project root for full license information.
 // 
-#include "msixtest.hpp"
+#include "msixtest_int.hpp"
 #include "catch.hpp"
 
 #include <string>
@@ -67,11 +67,13 @@ namespace MsixTest {
         {
             auto filesCopy(files);
 
-            auto lambda = [&filesCopy](const std::string& path, dirent* entry)
+            auto lambda = [&filesCopy, &directory](const std::string& path, dirent* entry)
             {
                 if (entry->d_type == DT_DIR) { return true; }
 
-                auto file = path.substr(path.find_first_of('/') + 1); // Remove root directory
+                // Remove root directory
+                auto file = path;
+                file.erase(0, directory.size() + 1);
 
                 auto find = filesCopy.find(file);
                 if (find == filesCopy.end())

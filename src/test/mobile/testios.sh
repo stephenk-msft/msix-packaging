@@ -1,16 +1,16 @@
 #!/bin/bash
 testfailed=0
 device="iPhone 8"
-project=../mobile/iOSBVT/iOSBVT.xcodeproj
+project=iOSBVT/iOSBVT.xcodeproj
 sdk=iphonesimulator
+outputFile=/private/tmp/TEST-MsixSDK-iOS.xml
 
 usage()
 {
     echo "usage: ./testios [-d <device>] [-p <project>] [-sdk <sdk>] [-o <ouput location>]"
     echo $'\t' "-d <device>. Default iPhone 8"
-    echo $'\t' "-p <project>. Default is ../mobile/iOSBVT/iOSBVT.xcodeproj"
+    echo $'\t' "-p <project>. Default is iOSBVT/iOSBVT.xcodeproj"
     echo $'\t' "-sdk <sdk>. Default is iphonesimulator"
-    echo $'\t' "-o <output file>. Test result output file. Default is /private/tmp/testResults.txt"
 }
 
 printsetup()
@@ -20,7 +20,6 @@ printsetup()
     echo "App Name: " $app
     echo "AppIdentifier: " $appId
     echo "Sdk: " $sdk
-    echo "Output file Location: " $resultFile
 }
 
 while [ "$1" != "" ]; do
@@ -53,8 +52,8 @@ appId=`xcodebuild -showBuildSettings -project $project | grep PRODUCT_BUNDLE_IDE
 
 printsetup
 
-# Clean test
-rm $outputFile -f
+# Clean test. The iOSBVT outputs the result file under /private/tmp/TEST-MsixSDK-iOS.xml
+rm -f $outputFile
 
 # Start emulator
 echo "Starting emulator"
@@ -83,7 +82,7 @@ xcrun simctl install booted $appDir
 xcrun simctl launch booted $appId &
 
 # Look for a process where its command contains <App>.app
-# If we find it the app is running, if we don't the app hasn't started yet.
+# If we don't the app, then it hasn't started yet.
 # The first grep will produce two results so we need to explicitly remove "grep"
 while ! ps aux | grep $app.app | grep -v grep
 do
@@ -96,13 +95,14 @@ do
     echo "Waiting for test to finish..."
     sleep 5
 done
+# The app will terminate automatically after the tests run.
 echo "Test finished"
 
 echo "Uninstalling app and shuting down emulator"
 xcrun simctl uninstall booted $appId
 xcrun simctl shutdown "$device"
 
-function ParseResult {
+function PrintFile {
     local FILE="$1"
     if [ ! -f $FILE ]
     then
@@ -110,24 +110,6 @@ function ParseResult {
         exit 1
     fi
     cat $FILE
-    if grep -q "FAILED" $FILE
-    then
-        echo "FAILED"
-        testfailed=1
-    else
-        echo "succeeded"
-    fi
 }
 
-ParseResult /private/tmp/testResults.txt
-ParseResult /private/tmp/testApiResults.txt
-
-echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="
-if [ $testfailed -ne 0 ]
-then
-    echo "                           FAILED                                 "
-    exit $testfailed
-else
-    echo "                           passed                                 "
-    exit 0
-fi
+PrintFile $outputFile

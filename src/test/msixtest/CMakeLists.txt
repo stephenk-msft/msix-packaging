@@ -30,14 +30,15 @@ endif()
 
 # For mobile, we create a shared library that will be added to the apps to be
 # tested. For non-mobile we create a msixtest executable and we provide our own 
-# main, which is for a forwarder to msixtest_main.
+# main, which is for a forwarder to msixtest_main. 
 if (AOSP OR IOS)
     add_library(${PROJECT_NAME} SHARED
-        ${MsixTests}
-        )   
+        ${MsixTestsFiles}
+        )
 else()
     add_executable(${PROJECT_NAME}
         main.cpp
+        msixtest.cpp
         ${MsixTestsFiles}
         ${MANIFEST}
         )

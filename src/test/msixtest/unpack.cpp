@@ -2,30 +2,28 @@
 //  Copyright (C) 2019 Microsoft.  All rights reserved.
 //  See LICENSE file in the project root for full license information.
 // 
-#include "msixtest.hpp"
 #include "catch.hpp"
+#include "msixtest_int.hpp"
 #include "unpack_testdata.hpp"
 
 #include <iostream>
 
-// Returns full relative path of the package with respect to the test
-std::string GetUnpackTestPackageLocation(const char* package)
-{
-    std::string path = MsixTest::TestData::Unpack + std::string(package);
-    return MsixTest::Directory::PathAsCurrentPlatform(path);
-}
-
 void RunUnpackTest(HRESULT expected, const char* package, MSIX_VALIDATION_OPTION option, bool clean = true)
 {
     std::cout << "Testing: " << std::endl;
-    std::cout << "\tPackage:\t" << package << std::endl; 
+    std::cout << "\tPackage:" << package << std::endl; 
 
-    auto packagePath = GetUnpackTestPackageLocation(package);
+    auto testData = MsixTest::TestData::GetInstance();
+
+    auto packagePath = testData->GetPath(MsixTest::TestData::Directory::Unpack) + "/" + std::string(package);
+    packagePath = MsixTest::Directory::PathAsCurrentPlatform(packagePath);
+
+    auto outputDir = testData->GetPath(MsixTest::TestData::Directory::Output);
 
     HRESULT actual = UnpackPackage(MSIX_PACKUNPACK_OPTION_NONE,
                                    option,
                                    const_cast<char*>(packagePath.c_str()),
-                                   const_cast<char*>(MsixTest::TestData::OutputDirectory));
+                                   const_cast<char*>(outputDir.c_str()));
 
     CHECK(expected == actual);
     MsixTest::Log::PrintMsixLog(expected, actual);
@@ -33,7 +31,7 @@ void RunUnpackTest(HRESULT expected, const char* package, MSIX_VALIDATION_OPTION
     // clean directory if succeeded and requested
     if ((actual == S_OK) && clean)
     {
-        CHECK_NOFAIL(MsixTest::Directory::CleanDirectory(MsixTest::TestData::OutputDirectory));
+        CHECK(MsixTest::Directory::CleanDirectory(outputDir));
     }
 }
 
@@ -48,10 +46,11 @@ TEST_CASE("Unpack_StoreSigned_Desktop_x64_MoviesTV", "[unpack]")
 
     // Compare that all the files extracted on disk are correct
     auto files = MsixTest::Unpack::GetExpectedFiles();
-    CHECK(MsixTest::Directory::CompareDirectory(MsixTest::TestData::OutputDirectory, files));
+    auto outputDir = MsixTest::TestData::GetInstance()->GetPath(MsixTest::TestData::Directory::Output);
+    CHECK(MsixTest::Directory::CompareDirectory(outputDir, files));
 
     // Clean directory
-    CHECK_NOFAIL(MsixTest::Directory::CleanDirectory(MsixTest::TestData::OutputDirectory));
+    CHECK(MsixTest::Directory::CleanDirectory(outputDir));
 }
 
 TEST_CASE("Unpack_Empty", "[unpack]")

@@ -5,13 +5,50 @@
 #define CATCH_CONFIG_RUNNER // don't use catch2 main CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-#include "msixtest.hpp"
+#include "msixtest_int.hpp"
 
 #include <iostream>
 #include <locale>
 #include <codecvt>
 
 namespace MsixTest {
+
+    TestData* TestData::m_instance = nullptr;
+
+    TestData* TestData::GetInstance()
+    {
+        if (m_instance == nullptr)
+        {
+            m_instance = new TestData();
+        }
+        return m_instance;
+    }
+
+    void TestData::SetRoot(const char* root)
+    {
+        if (root != nullptr)
+        {
+            m_root = std::string(root) + '/';
+        }
+    }
+
+    std::string TestData::GetRoot()
+    {
+        return m_root;
+    }
+
+    // Always return using '/' separators
+    std::string TestData::GetPath(Directory opt)
+    {
+        switch(opt)
+        {
+            case Output:
+                return m_root + "output";
+            case Unpack:
+                return m_root + "testData/unpack";
+        }
+        return {};
+    }
 
     namespace Allocators
     {
@@ -60,11 +97,18 @@ namespace MsixTest {
             std::cout << std::string(CATCH_CONFIG_CONSOLE_WIDTH, '-') << std::endl;
         }
     }
-
 }
 
-int msixtest_main(int argc, char* argv[])
+#ifndef WIN32
+__attribute__((visibility("default"))) 
+#endif
+int msixtest_main(int argc, char* argv[], const char* testDataPath)
 {
+    if (testDataPath != nullptr)
+    {
+        MsixTest::TestData::GetInstance()->SetRoot(testDataPath);
+    }
+
     // Forward the arguments to Catch2
     int result = Catch::Session().run(argc, argv);
 

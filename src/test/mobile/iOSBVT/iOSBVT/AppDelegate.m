@@ -7,8 +7,8 @@
 // 
 
 #import "AppDelegate.h"
-extern signed long RunTests(char* source, char* target);
-extern int RunApiTest(char* input, char* target, char* packageRootPath);
+#import "msixtest.hpp"
+
 @interface AppDelegate ()
 
 @end
@@ -22,16 +22,15 @@ extern int RunApiTest(char* input, char* target, char* packageRootPath);
     char str[256] = {0};
     NSBundle* mainBundle = [NSBundle mainBundle];
     NSString* resourcePath = mainBundle.resourcePath;
-    NSString* sourcePath = [resourcePath stringByAppendingString:@"/"];
-    // End-to-end tests
-    char* source = [sourcePath UTF8String];
-    unsigned long result = RunTests(source, "tmp/");
-    sprintf(str,"0x%08X", result);
-    // Api tests
-    NSString* inputFile = [sourcePath stringByAppendingString:@"apitest_test_1.txt"];
-    char* input = [inputFile UTF8String];
-    int apiResult = RunApiTest(input, "tmp/", source);
-    sprintf(str,"%d", apiResult);
+    const char* testDataPath = [resourcePath UTF8String];
+
+    // msixtests
+    // Simulate commnad arguments: "msixtest -s -r junit -o tmp/TEST-MsixSDK-iOS.xml"
+    char *arguments[6] = { "msix_test", "-s", "-r", "junit" , "-o", "tmp/TEST-MsixSDK-iOS.xml" };
+    // Use full commands for testing
+    //char *arguments[2] = { "msix_test", "-l" };
+    int result = msixtest_main(6, arguments, testDataPath);
+    sprintf(str,"%d", result);
     exit(0); // Maybe I wouldn't do this if there was an actual API to do this easily...
     return YES;
 }

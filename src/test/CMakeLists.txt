@@ -8,9 +8,5 @@ cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
 # ..\..\src\test\testData\<path> in the test 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/testData" DESTINATION "${MSIX_TEST_OUTPUT_DIRECTORY}")
 
-if(IOS)
-    add_subdirectory(mobile)
-endif()
-
 add_subdirectory(api)
 add_subdirectory(msixtest)

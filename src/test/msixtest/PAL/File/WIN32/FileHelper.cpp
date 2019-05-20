@@ -98,12 +98,12 @@ namespace MsixTest {
             auto dirUtf16 = String::utf8_to_utf16(directory);
             auto filesCopy(files);
 
-            auto lambda = [&filesCopy](const std::wstring& wfile, PWIN32_FIND_DATA fileData)
+            auto lambda = [&filesCopy, &directory](const std::wstring& wfile, PWIN32_FIND_DATA fileData)
             {
                 if (fileData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) { return true; }
 
                 auto file = String::utf16_to_utf8(wfile);
-                file = file.substr(file.find_first_of("\\") + 1); // Remove root directory
+                file.erase(0, directory.size() + 1); // Remove root directory
                 std::replace(file.begin(), file.end(), '\\', '/'); // Replace windows separator
 
                 auto find = filesCopy.find(file);
