@@ -23,9 +23,7 @@ namespace MSIX {
             static const char* modes[] = { "rb", "wb", "ab", "r+b", "w+b", "a+b" };
             #ifdef WIN32
             errno_t err = fopen_s(&m_file, name.c_str(), modes[mode]);
-            std::ostringstream builder;
-            builder << "file: '" << name << "' does not exist.";
-            ThrowErrorIfNot(Error::FileOpen, (err==0), builder.str().c_str());
+            ThrowErrorIfNot(Error::FileOpen, (err==0), m_name.c_str());
             #else
             m_file = std::fopen(name.c_str(), modes[mode]);
             ThrowErrorIfNot(Error::FileOpen, (m_file), name.c_str());
@@ -45,9 +43,7 @@ namespace MSIX {
             #ifdef WIN32
             static const wchar_t* modes[] = { L"rb", L"wb", L"ab", L"r+b", L"w+b", L"a+b" };
             errno_t err = _wfopen_s(&m_file, name.c_str(), modes[mode]);
-            std::wostringstream builder;
-            builder << L"file: '" << name << L"' does not exist.";
-            ThrowErrorIfNot(Error::FileOpen, (err==0), "change this");
+            ThrowErrorIfNot(Error::FileOpen, (err==0),  m_name.c_str());
             #else
             static const char* modes[] = { "rb", "wb", "ab", "r+b", "w+b", "a+b" };
             m_file = std::fopen(m_name.c_str(), modes[mode]);
