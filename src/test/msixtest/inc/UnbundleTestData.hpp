@@ -3,6 +3,7 @@
 //  See LICENSE file in the project root for full license information.
 // 
 #include <map>
+#include <string>
 
 namespace MsixTest { 
 

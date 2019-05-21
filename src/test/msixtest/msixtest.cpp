@@ -48,6 +48,10 @@ namespace MsixTest {
                 return m_root + "testData/unpack";
             case Unbundle:
                 return m_root + "testData/unpack/bundles";
+            case Flat:
+                return m_root + "testData/unpack/flat";
+            case BadFlat:
+                return m_root + "testData/unpack/badFlat";
         }
         return {};
     }

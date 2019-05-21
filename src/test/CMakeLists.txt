@@ -8,5 +8,13 @@ cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
 # ..\..\src\test\testData\<path> in the test 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/testData" DESTINATION "${MSIX_TEST_OUTPUT_DIRECTORY}")
 
+# Used for flat tests. Remove assets.appx to make it invalid
+file(COPY "${MSIX_TEST_OUTPUT_DIRECTORY}/testData/unpack/flat/"
+    DESTINATION "${MSIX_TEST_OUTPUT_DIRECTORY}/testData/unpack/badflat/"
+    FILES_MATCHING
+        PATTERN "*"
+        PATTERN "assets*" EXCLUDE
+)
+
 add_subdirectory(api)
 add_subdirectory(msixtest)

@@ -10,14 +10,15 @@
 #include <iostream>
 
 void RunUnbundleTest(HRESULT expected, const std::string& bundle, MSIX_VALIDATION_OPTION validation,
-    MSIX_PACKUNPACK_OPTION packUnpack, MSIX_APPLICABILITY_OPTIONS applicability, bool clean = true)
+    MSIX_PACKUNPACK_OPTION packUnpack, MSIX_APPLICABILITY_OPTIONS applicability,
+    MsixTest::TestData::Directory dir = MsixTest::TestData::Directory::Unbundle, bool clean = true)
 {
     std::cout << "Testing: " << std::endl;
     std::cout << "\tBundle: " << bundle << std::endl; 
 
     auto testData = MsixTest::TestData::GetInstance();
 
-    auto bundlePath = testData->GetPath(MsixTest::TestData::Directory::Unbundle) + "/" + std::string(bundle);
+    auto bundlePath = testData->GetPath(dir) + "/" + std::string(bundle);
     bundlePath = MsixTest::Directory::PathAsCurrentPlatform(bundlePath);
 
     auto outputDir = testData->GetPath(MsixTest::TestData::Directory::Output);
@@ -46,7 +47,7 @@ TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV", "[unbundle]")
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
 
-    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, false);
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::Unbundle, false);
 
     auto outputDir = MsixTest::TestData::GetInstance()->GetPath(MsixTest::TestData::Directory::Output);
 
@@ -70,7 +71,7 @@ TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV_pfn", "[unbundle]")
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_CREATEPACKAGESUBFOLDER;
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
 
-    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, false);
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::Unbundle, false);
 
     // The expected folder structure should be <output>/Microsoft.ZuneVideo_2019.6.25071.0_neutral_~_8wekyb3d8bbwe/<files>
     // Append it to the already existing expected files map
@@ -97,7 +98,7 @@ TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV_lang_applicability_off"
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_SKIPLANGUAGE;
 
-    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, false);
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::Unbundle, false);
 
     auto outputDir = MsixTest::TestData::GetInstance()->GetPath(MsixTest::TestData::Directory::Output);
 
@@ -278,4 +279,26 @@ TEST_CASE("Unbundle_BundleWithIntlPackage", "[unbundle]")
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
 
     RunUnbundleTest(expected, bundle, validation, packUnpack, applicability);
+}
+
+TEST_CASE("Unbundle_FlatBundleWithAsset")
+{
+    HRESULT expected                         = 0x00000000;
+    std::string bundle                       = "FlatBundleWithAsset.appxbundle";
+    MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
+    MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
+    MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
+
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::Flat);
+}
+
+TEST_CASE("Unbundle_FlatBundleWithAsset_MissingPackage")
+{
+    HRESULT expected                         = 0x8bad0001;
+    std::string bundle                       = "FlatBundleWithAsset.appxbundle";
+    MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
+    MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
+    MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
+
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::BadFlat);
 }

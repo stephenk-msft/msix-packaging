@@ -20,7 +20,9 @@ namespace MsixTest {
         {
             Output,
             Unpack,
-            Unbundle
+            Unbundle,
+            Flat,
+            BadFlat
         } Directory;
 
         static TestData* GetInstance();
