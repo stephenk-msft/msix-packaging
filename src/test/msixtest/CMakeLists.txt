@@ -11,20 +11,28 @@ if(WIN32)
     set(MANIFEST ${MSIX_TEST_OUTPUT_DIRECTORY}/${PROJECT_NAME}.exe.manifest)
 endif()
 
-set(MsixTestsFiles)
+set(MsixTestFiles)
 
-list(APPEND MsixTestsFiles
+list(APPEND MsixTestFiles
     msixtest.cpp
     unpack.cpp
+    UnpackTestData.cpp
 )
 
+if(NOT SKIP_BUNDLES)
+    list(APPEND MsixTestFiles
+        unbundle.cpp
+        UnbundleTestData.cpp
+    )
+endif()
+
 if (WIN32)
-    list(APPEND MsixTestsFiles
-        "PAL/File/WIN32/FileHelper.cpp"
+    list(APPEND MsixTestFiles
+        "PAL/File/WIN32/FileHelpers.cpp"
     )
 else()
-    list(APPEND MsixTestsFiles
-        "PAL/File/POSIX/FileHelper.cpp"
+    list(APPEND MsixTestFiles
+        "PAL/File/POSIX/FileHelpers.cpp"
     )
 endif()
 
@@ -33,13 +41,13 @@ endif()
 # main, which is for a forwarder to msixtest_main. 
 if (AOSP OR IOS)
     add_library(${PROJECT_NAME} SHARED
-        ${MsixTestsFiles}
+        ${MsixTestFiles}
         )
 else()
     add_executable(${PROJECT_NAME}
         main.cpp
         msixtest.cpp
-        ${MsixTestsFiles}
+        ${MsixTestFiles}
         ${MANIFEST}
         )
 endif()

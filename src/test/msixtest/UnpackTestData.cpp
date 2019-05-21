@@ -2,13 +2,14 @@
 //  Copyright (C) 2019 Microsoft.  All rights reserved.
 //  See LICENSE file in the project root for full license information.
 // 
-// Add here all the expected data for unpack packages
+#include "UnpackTestData.hpp"
+
 #include <map>
 
 namespace MsixTest { namespace Unpack {
 
     // Returns files that must be unpacked for StoreSigned_Desktop_x64_MoviesTV.appx
-    std::map<std::string, std::uint64_t> GetExpectedFiles()
+    const std::map<std::string, std::uint64_t>& GetExpectedFiles()
     {
         static const std::map<std::string, std::uint64_t> files = 
         {
@@ -145,7 +146,6 @@ namespace MsixTest { namespace Unpack {
             { "Images/BlankImage.png" , 15392 },
             { "Resources/Fonts/SegMVR2.ttf" , 47352 }
         };
-
         return files;
     }
 } }

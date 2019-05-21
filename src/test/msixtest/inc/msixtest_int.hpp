@@ -19,7 +19,8 @@ namespace MsixTest {
         typedef enum
         {
             Output,
-            Unpack
+            Unpack,
+            Unbundle
         } Directory;
 
         static TestData* GetInstance();
@@ -40,14 +41,6 @@ namespace MsixTest {
     {
         LPVOID STDMETHODCALLTYPE Allocate(SIZE_T cb);
         void STDMETHODCALLTYPE Free(LPVOID pv);
-    }
-
-    namespace Directory
-    {
-        bool CleanDirectory(const std::string& directory);
-        bool CompareDirectory(const std::string& directory, const std::map<std::string, std::uint64_t>& files);
-
-        std::string PathAsCurrentPlatform(std::string& path);
     }
 
     namespace String

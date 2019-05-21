@@ -46,6 +46,8 @@ namespace MsixTest {
                 return m_root + "output";
             case Unpack:
                 return m_root + "testData/unpack";
+            case Unbundle:
+                return m_root + "testData/unpack/bundles";
         }
         return {};
     }
@@ -79,10 +81,9 @@ namespace MsixTest {
     namespace Log {
         void PrintMsixLog(HRESULT expect, HRESULT result)
         {
-            std::cout << "\tExpect:\t" << std::hex << expect << ", Got: " << result << std::endl;
+            std::cout << "\tExpect: " << std::hex << expect << std::endl << "\tGot:    " << result << std::endl;
             if (result != S_OK)
             {
-                std::cout << "\tError:\t" << std::hex << result << std::endl;
                 String::Text<char> text;
                 auto logResult = GetLogTextUTF8(Allocators::Allocate, &text);
                 if (0 == logResult)

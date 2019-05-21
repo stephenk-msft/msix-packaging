@@ -3,7 +3,7 @@
 //  See LICENSE file in the project root for full license information.
 // 
 #include "msixtest_int.hpp"
-#include "catch.hpp"
+#include "FileHelpers.hpp"
 
 #include <string>
 #include <map>
@@ -109,7 +109,7 @@ namespace MsixTest {
         }
 
         // Converts path to posix separator
-        std::string PathAsCurrentPlatform(std::string& path)
+        std::string PathAsCurrentPlatform(const std::string& path)
         {
             std::string result(path);
             std::replace(result.begin(), result.end(), '\\', '/');

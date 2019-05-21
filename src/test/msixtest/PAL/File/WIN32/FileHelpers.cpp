@@ -3,10 +3,11 @@
 //  See LICENSE file in the project root for full license information.
 //
 #include "msixtest_int.hpp"
-#include "catch.hpp"
+#include "FileHelpers.hpp"
 
 #include "Windows.h"
 
+#include <algorithm>
 #include <string>
 #include <iostream>
 
@@ -59,7 +60,8 @@ namespace MsixTest {
         // best effort to clean the directory.
         bool CleanDirectory(const std::string& directory)
         {
-            auto dirUtf16 = String::utf8_to_utf16(directory);
+            auto dir = MsixTest::Directory::PathAsCurrentPlatform(directory);
+            auto dirUtf16 = String::utf8_to_utf16(dir);
 
             auto lambda = [](const std::wstring& file, PWIN32_FIND_DATA fileData)
             {
@@ -95,15 +97,16 @@ namespace MsixTest {
 
         bool CompareDirectory(const std::string& directory, const std::map<std::string, std::uint64_t>& files)
         {
-            auto dirUtf16 = String::utf8_to_utf16(directory);
+            auto dir = MsixTest::Directory::PathAsCurrentPlatform(directory);
+            auto dirUtf16 = String::utf8_to_utf16(dir);
             auto filesCopy(files);
 
-            auto lambda = [&filesCopy, &directory](const std::wstring& wfile, PWIN32_FIND_DATA fileData)
+            auto lambda = [&filesCopy, &dir](const std::wstring& wfile, PWIN32_FIND_DATA fileData)
             {
                 if (fileData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) { return true; }
 
                 auto file = String::utf16_to_utf8(wfile);
-                file.erase(0, directory.size() + 1); // Remove root directory
+                file.erase(0, dir.size() + 1); // Remove root directory
                 std::replace(file.begin(), file.end(), '\\', '/'); // Replace windows separator
 
                 auto find = filesCopy.find(file);
@@ -137,7 +140,7 @@ namespace MsixTest {
         }
 
         // Converts path to windows separator
-        std::string PathAsCurrentPlatform(std::string& path)
+        std::string PathAsCurrentPlatform(const std::string& path)
         {
             std::string result(path);
             std::replace(result.begin(), result.end(), '/', '\\');
