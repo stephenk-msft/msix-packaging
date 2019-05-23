@@ -11,17 +11,17 @@
 
 void RunUnbundleTest(HRESULT expected, const std::string& bundle, MSIX_VALIDATION_OPTION validation,
     MSIX_PACKUNPACK_OPTION packUnpack, MSIX_APPLICABILITY_OPTIONS applicability,
-    MsixTest::TestData::Directory dir = MsixTest::TestData::Directory::Unbundle, bool clean = true)
+    MsixTest::TestPath::Directory dir = MsixTest::TestPath::Directory::Unbundle, bool clean = true)
 {
     std::cout << "Testing: " << std::endl;
     std::cout << "\tBundle: " << bundle << std::endl; 
 
-    auto testData = MsixTest::TestData::GetInstance();
+    auto testData = MsixTest::TestPath::GetInstance();
 
     auto bundlePath = testData->GetPath(dir) + "/" + std::string(bundle);
     bundlePath = MsixTest::Directory::PathAsCurrentPlatform(bundlePath);
 
-    auto outputDir = testData->GetPath(MsixTest::TestData::Directory::Output);
+    auto outputDir = testData->GetPath(MsixTest::TestPath::Directory::Output);
 
     HRESULT actual = UnpackBundle(packUnpack,
                                   validation,
@@ -41,15 +41,15 @@ void RunUnbundleTest(HRESULT expected, const std::string& bundle, MSIX_VALIDATIO
 
 TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV", "[unbundle]")
 {
-    HRESULT expected                         = 0x00000000;
+    HRESULT expected                         = S_OK;
     std::string bundle                       = "StoreSigned_Desktop_x86_x64_MoviesTV.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
 
-    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::Unbundle, false);
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestPath::Directory::Unbundle, false);
 
-    auto outputDir = MsixTest::TestData::GetInstance()->GetPath(MsixTest::TestData::Directory::Output);
+    auto outputDir = MsixTest::TestPath::GetInstance()->GetPath(MsixTest::TestPath::Directory::Output);
 
     // Verify all the files extracted on disk are correct
     auto files = MsixTest::Unbundle::GetExpectedFilesFullApplicable();
@@ -65,13 +65,13 @@ TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV", "[unbundle]")
 
 TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV_pfn", "[unbundle]")
 {
-    HRESULT expected                         = 0x00000000;
+    HRESULT expected                         = S_OK;
     std::string bundle                       = "StoreSigned_Desktop_x86_x64_MoviesTV.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_CREATEPACKAGESUBFOLDER;
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
 
-    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::Unbundle, false);
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestPath::Directory::Unbundle, false);
 
     // The expected folder structure should be <output>/Microsoft.ZuneVideo_2019.6.25071.0_neutral_~_8wekyb3d8bbwe/<files>
     // Append it to the already existing expected files map
@@ -83,7 +83,7 @@ TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV_pfn", "[unbundle]")
         filesWithPfn.emplace(pfn + file.first, file.second);
     }
 
-    auto outputDir = MsixTest::TestData::GetInstance()->GetPath(MsixTest::TestData::Directory::Output);
+    auto outputDir = MsixTest::TestPath::GetInstance()->GetPath(MsixTest::TestPath::Directory::Output);
     CHECK(MsixTest::Directory::CompareDirectory(outputDir, filesWithPfn));
 
     // Clean directory
@@ -92,15 +92,15 @@ TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV_pfn", "[unbundle]")
 
 TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV_lang_applicability_off", "[unbundle]")
 {
-    HRESULT expected                         = 0x00000000;
+    HRESULT expected                         = S_OK;
     std::string bundle                       = "StoreSigned_Desktop_x86_x64_MoviesTV.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_SKIPLANGUAGE;
 
-    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::Unbundle, false);
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestPath::Directory::Unbundle, false);
 
-    auto outputDir = MsixTest::TestData::GetInstance()->GetPath(MsixTest::TestData::Directory::Output);
+    auto outputDir = MsixTest::TestPath::GetInstance()->GetPath(MsixTest::TestPath::Directory::Output);
 
     // Verify all the files extracted on disk are correct
     // We ran without language applicability, so expect all files to be there.
@@ -118,7 +118,7 @@ TEST_CASE("Unbundle_StoreSigned_Desktop_x86_x64_MoviesTV_lang_applicability_off"
 
 TEST_CASE("Unbundle_BlockMapContainsPayloadPackage", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0051;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::BlockMapSemanticError);
     std::string bundle                       = "BlockMapContainsPayloadPackage.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -129,7 +129,7 @@ TEST_CASE("Unbundle_BlockMapContainsPayloadPackage", "[unbundle]")
 
 TEST_CASE("Unbundle_BlockMapIsMissing", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0033;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::MissingAppxBlockMapXML);
     std::string bundle                       = "BlockMapIsMissing.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -140,7 +140,7 @@ TEST_CASE("Unbundle_BlockMapIsMissing", "[unbundle]")
 
 TEST_CASE("Unbundle_BlockMapViolatesSchema", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad1002;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::XmlError);
     std::string bundle                       = "BlockMapViolatesSchema.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -151,7 +151,7 @@ TEST_CASE("Unbundle_BlockMapViolatesSchema", "[unbundle]")
 
 TEST_CASE("Unbundle_ContainsNoPayload", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad1002;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::XmlError);
     std::string bundle                       = "ContainsNoPayload.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -162,7 +162,7 @@ TEST_CASE("Unbundle_ContainsNoPayload", "[unbundle]")
 
 TEST_CASE("Unbundle_ContainsOnlyResourcePackages", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0061;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::AppxManifestSemanticError);
     std::string bundle                       = "ContainsOnlyResourcePackages.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -173,7 +173,7 @@ TEST_CASE("Unbundle_ContainsOnlyResourcePackages", "[unbundle]")
 
 TEST_CASE("Unbundle_MainBundle", "[unbundle]")
 {
-    HRESULT expected                         = 0x00000000;
+    HRESULT expected                         = S_OK;
     std::string bundle                       = "MainBundle.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -184,7 +184,7 @@ TEST_CASE("Unbundle_MainBundle", "[unbundle]")
 
 TEST_CASE("Unbundle_ManifestIsMissing", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0034;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::MissingAppxManifestXML);
     std::string bundle                       = "ManifestIsMissing.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -195,7 +195,7 @@ TEST_CASE("Unbundle_ManifestIsMissing", "[unbundle]")
 
 TEST_CASE("Unbundle_ManifestPackageHasIncorrectSize", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0061;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::AppxManifestSemanticError);
     std::string bundle                       = "ManifestPackageHasIncorrectSize.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -206,7 +206,7 @@ TEST_CASE("Unbundle_ManifestPackageHasIncorrectSize", "[unbundle]")
 
 TEST_CASE("Unbundle_ManifestViolatesSchema", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad1002;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::XmlError);
     std::string bundle                       = "ManifestViolatesSchema.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -217,7 +217,7 @@ TEST_CASE("Unbundle_ManifestViolatesSchema", "[unbundle]")
 
 TEST_CASE("Unbundle_PayloadPackageHasNonAppxExtension", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0061;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::AppxManifestSemanticError);
     std::string bundle                       = "PayloadPackageHasNonAppxExtension.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -228,7 +228,7 @@ TEST_CASE("Unbundle_PayloadPackageHasNonAppxExtension", "[unbundle]")
 
 TEST_CASE("Unbundle_PayloadPackageIsCompressed", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0061;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::AppxManifestSemanticError);
     std::string bundle                       = "PayloadPackageIsCompressed.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -239,7 +239,7 @@ TEST_CASE("Unbundle_PayloadPackageIsCompressed", "[unbundle]")
 
 TEST_CASE("Unbundle_PayloadPackageIsEmpty", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0003;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::FileRead);
     std::string bundle                       = "PayloadPackageIsEmpty.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -250,7 +250,7 @@ TEST_CASE("Unbundle_PayloadPackageIsEmpty", "[unbundle]")
 
 TEST_CASE("Unbundle_PayloadPackageIsNotAppxPackage", "[unbundle]")
 {
-    HRESULT expected                         = 0x80070057;
+    HRESULT expected                         = E_INVALIDARG;
     std::string bundle                       = "PayloadPackageIsNotAppxPackage.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -261,7 +261,7 @@ TEST_CASE("Unbundle_PayloadPackageIsNotAppxPackage", "[unbundle]")
 
 TEST_CASE("Unbundle_SignedUntrustedCert-CERT_E_CHAINING", "[unbundle]")
 {
-    HRESULT expected                         = 0x8bad0042;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::CertNotTrusted);
     std::string bundle                       = "SignedUntrustedCert-CERT_E_CHAINING.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -272,7 +272,7 @@ TEST_CASE("Unbundle_SignedUntrustedCert-CERT_E_CHAINING", "[unbundle]")
 
 TEST_CASE("Unbundle_BundleWithIntlPackage", "[unbundle]")
 {
-    HRESULT expected                         = 0x00000000;
+    HRESULT expected                         = S_OK;
     std::string bundle                       = "BundleWithIntlPackage.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
@@ -281,24 +281,24 @@ TEST_CASE("Unbundle_BundleWithIntlPackage", "[unbundle]")
     RunUnbundleTest(expected, bundle, validation, packUnpack, applicability);
 }
 
-TEST_CASE("Unbundle_FlatBundleWithAsset")
+TEST_CASE("Unbundle_FlatBundleWithAsset", "[unbundle][flat]")
 {
-    HRESULT expected                         = 0x00000000;
+    HRESULT expected                         = S_OK;
     std::string bundle                       = "FlatBundleWithAsset.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
 
-    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::Flat);
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestPath::Directory::Flat);
 }
 
-TEST_CASE("Unbundle_FlatBundleWithAsset_MissingPackage")
+TEST_CASE("Unbundle_FlatBundleWithAsset_MissingPackage", "[unbundle][flat]")
 {
-    HRESULT expected                         = 0x8bad0001;
+    HRESULT expected                         = static_cast<HRESULT>(MSIX::Error::FileOpen);
     std::string bundle                       = "FlatBundleWithAsset.appxbundle";
     MSIX_VALIDATION_OPTION validation        = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack        = MSIX_PACKUNPACK_OPTION_NONE;
     MSIX_APPLICABILITY_OPTIONS applicability = MSIX_APPLICABILITY_OPTION_FULL;
 
-    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestData::Directory::BadFlat);
+    RunUnbundleTest(expected, bundle, validation, packUnpack, applicability, MsixTest::TestPath::Directory::BadFlat);
 }

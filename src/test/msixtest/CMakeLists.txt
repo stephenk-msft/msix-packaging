@@ -9,6 +9,9 @@ if(WIN32)
     set(DESCRIPTION "msixtest manifest")
     configure_file(${CMAKE_PROJECT_ROOT}/manifest.cmakein ${MSIX_TEST_OUTPUT_DIRECTORY}/${PROJECT_NAME}.exe.manifest CRLF)
     set(MANIFEST ${MSIX_TEST_OUTPUT_DIRECTORY}/${PROJECT_NAME}.exe.manifest)
+    if(XML_PARSER MATCHES msxml6)
+        add_definitions(-DMSIX_MSXML6=1)
+    endif()
 endif()
 
 set(MsixTestFiles)
@@ -16,13 +19,15 @@ set(MsixTestFiles)
 list(APPEND MsixTestFiles
     msixtest.cpp
     unpack.cpp
-    UnpackTestData.cpp
+    api_package.cpp
+    testData/UnpackTestData.cpp
+    testData/BlockMapTestData.cpp
 )
 
 if(NOT SKIP_BUNDLES)
     list(APPEND MsixTestFiles
         unbundle.cpp
-        UnbundleTestData.cpp
+        testData/UnbundleTestData.cpp
     )
 endif()
 

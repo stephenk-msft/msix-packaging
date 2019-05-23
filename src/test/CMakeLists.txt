@@ -16,5 +16,4 @@ file(COPY "${MSIX_TEST_OUTPUT_DIRECTORY}/testData/unpack/flat/"
         PATTERN "assets*" EXCLUDE
 )
 
-add_subdirectory(api)
 add_subdirectory(msixtest)

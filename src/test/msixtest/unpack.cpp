@@ -15,12 +15,12 @@ void RunUnpackTest(HRESULT expected, const std::string& package, MSIX_VALIDATION
     std::cout << "Testing: " << std::endl;
     std::cout << "\tPackage:" << package << std::endl; 
 
-    auto testData = MsixTest::TestData::GetInstance();
+    auto testData = MsixTest::TestPath::GetInstance();
 
-    auto packagePath = testData->GetPath(MsixTest::TestData::Directory::Unpack) + "/" + std::string(package);
+    auto packagePath = testData->GetPath(MsixTest::TestPath::Directory::Unpack) + "/" + std::string(package);
     packagePath = MsixTest::Directory::PathAsCurrentPlatform(packagePath);
 
-    auto outputDir = testData->GetPath(MsixTest::TestData::Directory::Output);
+    auto outputDir = testData->GetPath(MsixTest::TestPath::Directory::Output);
 
     HRESULT actual = UnpackPackage(packUnpack,
                                    validation,
@@ -49,7 +49,7 @@ TEST_CASE("Unpack_StoreSigned_Desktop_x64_MoviesTV", "[unpack]")
 
     // Verify all the files extracted on disk are correct
     auto files = MsixTest::Unpack::GetExpectedFiles();
-    auto outputDir = MsixTest::TestData::GetInstance()->GetPath(MsixTest::TestData::Directory::Output);
+    auto outputDir = MsixTest::TestPath::GetInstance()->GetPath(MsixTest::TestPath::Directory::Output);
     CHECK(MsixTest::Directory::CompareDirectory(outputDir, files));
 
     // Clean directory
@@ -76,7 +76,7 @@ TEST_CASE("Unpack_StoreSigned_Desktop_x64_MoviesTV_pfn", "[unpack]")
         filesWithPfn.emplace(pfn + file.first, file.second);
     }
 
-    auto outputDir = MsixTest::TestData::GetInstance()->GetPath(MsixTest::TestData::Directory::Output);
+    auto outputDir = MsixTest::TestPath::GetInstance()->GetPath(MsixTest::TestPath::Directory::Output);
     CHECK(MsixTest::Directory::CompareDirectory(outputDir, filesWithPfn));
 
     // Clean directory
@@ -85,7 +85,7 @@ TEST_CASE("Unpack_StoreSigned_Desktop_x64_MoviesTV_pfn", "[unpack]")
 
 TEST_CASE("Unpack_Empty", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0002;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::FileSeek);
     std::string package               = "Empty.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_ALLOWSIGNATUREORIGINUNKNOWN;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -95,7 +95,7 @@ TEST_CASE("Unpack_Empty", "[unpack]")
 
 TEST_CASE("Unpack_HelloWorld", "[unpack]")
 {
-    HRESULT expected                  = 0x00000000;
+    HRESULT expected                  = S_OK;
     std::string package               = "HelloWorld.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -105,7 +105,7 @@ TEST_CASE("Unpack_HelloWorld", "[unpack]")
 
 TEST_CASE("Unpack_NotepadPlusPlus", "[unpack]")
 {
-    HRESULT expected                  = 0x00000000;
+    HRESULT expected                  = S_OK;
     std::string package               = "NotepadPlusPlus.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -115,7 +115,7 @@ TEST_CASE("Unpack_NotepadPlusPlus", "[unpack]")
 
 TEST_CASE("Unpack_IntlPackage", "[unpack]")
 {
-    HRESULT expected                  = 0x00000000;
+    HRESULT expected                  = S_OK;
     std::string package               = "IntlPackage.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -125,7 +125,7 @@ TEST_CASE("Unpack_IntlPackage", "[unpack]")
 
 TEST_CASE("Unpack_SignatureNotLastPart-ERROR_BAD_FORMAT", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0042;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::CertNotTrusted);
     std::string package               = "SignatureNotLastPart-ERROR_BAD_FORMAT.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -135,7 +135,7 @@ TEST_CASE("Unpack_SignatureNotLastPart-ERROR_BAD_FORMAT", "[unpack]")
 
 TEST_CASE("Unpack_SignedTamperedBlockMap-TRUST_E_BAD_DIGEST", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0042;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::CertNotTrusted);
     std::string package               = "SignedTamperedBlockMap-TRUST_E_BAD_DIGEST.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -145,7 +145,7 @@ TEST_CASE("Unpack_SignedTamperedBlockMap-TRUST_E_BAD_DIGEST", "[unpack]")
 
 TEST_CASE("Unpack_SignedTamperedBlockMap-TRUST_E_BAD_DIGEST_sv", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0041;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::SignatureInvalid);
     std::string package               = "SignedTamperedBlockMap-TRUST_E_BAD_DIGEST.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_ALLOWSIGNATUREORIGINUNKNOWN;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -155,7 +155,7 @@ TEST_CASE("Unpack_SignedTamperedBlockMap-TRUST_E_BAD_DIGEST_sv", "[unpack]")
 
 TEST_CASE("Unpack_SignedTamperedCD-TRUST_E_BAD_DIGEST", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0042;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::CertNotTrusted);
     std::string package               = "SignedTamperedCD-TRUST_E_BAD_DIGEST.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -165,7 +165,7 @@ TEST_CASE("Unpack_SignedTamperedCD-TRUST_E_BAD_DIGEST", "[unpack]")
 
 TEST_CASE("Unpack_SignedUntrustedCert", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0042;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::CertNotTrusted);
     std::string package               = "SignedUntrustedCert-CERT_E_CHAINING.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -175,7 +175,7 @@ TEST_CASE("Unpack_SignedUntrustedCert", "[unpack]")
 
 TEST_CASE("Unpack_TestAppxPackage_Win32", "[unpack]")
 {
-    HRESULT expected                  = 0x00000000;
+    HRESULT expected                  = S_OK;
     std::string package               = "TestAppxPackage_Win32.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -185,7 +185,7 @@ TEST_CASE("Unpack_TestAppxPackage_Win32", "[unpack]")
 
 TEST_CASE("Unpack_TestAppxPackage_x64", "[unpack]")
 {
-    HRESULT expected                  = 0x00000000;
+    HRESULT expected                  = S_OK;
     std::string package               = "TestAppxPackage_x64.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -195,7 +195,7 @@ TEST_CASE("Unpack_TestAppxPackage_x64", "[unpack]")
 
 TEST_CASE("Unpack_UnsignedZip64WithCI-APPX_E_MISSING_REQUIRED_FILE", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0012; // TODO: change this to 0x8bad0031 when merge with packaging
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::ZipLocalFileHeader); // TODO: change this to MissingAppxSignatureP7X when merge with packaging
     std::string package               = "UnsignedZip64WithCI-APPX_E_MISSING_REQUIRED_FILE.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_FULL;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -205,7 +205,7 @@ TEST_CASE("Unpack_UnsignedZip64WithCI-APPX_E_MISSING_REQUIRED_FILE", "[unpack]")
 
 TEST_CASE("Unpack_FileDoesNotExist", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0001;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::FileOpen);
     std::string package               = "FileDoesNotExist.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -213,9 +213,9 @@ TEST_CASE("Unpack_FileDoesNotExist", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/Missing_Manifest_in_blockmap", "[unpack]")
+TEST_CASE("Unpack_BlockMap_Missing_Manifest_in_blockmap", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0051;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::BlockMapSemanticError);
     std::string package               = "BlockMap/Missing_Manifest_in_blockmap.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -223,9 +223,9 @@ TEST_CASE("Unpack_BlockMap/Missing_Manifest_in_blockmap", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/ContentTypes_in_blockmap", "[unpack]")
+TEST_CASE("Unpack_BlockMap_ContentTypes_in_blockmap", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0051;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::BlockMapSemanticError);
     std::string package               = "BlockMap/ContentTypes_in_blockmap.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -233,9 +233,9 @@ TEST_CASE("Unpack_BlockMap/ContentTypes_in_blockmap", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/Invalid_Bad_Block", "[unpack]")
+TEST_CASE("Unpack_BlockMap_Invalid_Bad_Block", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0051;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::BlockMapSemanticError);
     std::string package               = "BlockMap/Invalid_Bad_Block.msix";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -243,9 +243,9 @@ TEST_CASE("Unpack_BlockMap/Invalid_Bad_Block", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/Size_wrong_uncompressed", "[unpack]")
+TEST_CASE("Unpack_BlockMap_Size_wrong_uncompressed", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0051;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::BlockMapSemanticError);
     std::string package               = "BlockMap/Size_wrong_uncompressed.msix";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -253,9 +253,9 @@ TEST_CASE("Unpack_BlockMap/Size_wrong_uncompressed", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/Extra_file_in_blockmap", "[unpack]")
+TEST_CASE("Unpack_BlockMap_Extra_file_in_blockmap", "[unpack]")
 {
-    HRESULT expected                  = 0x80070002;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::FileNotFound);
     std::string package               = "BlockMap/Extra_file_in_blockmap.msix";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -263,9 +263,9 @@ TEST_CASE("Unpack_BlockMap/Extra_file_in_blockmap", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/File_missing_from_blockmap", "[unpack]")
+TEST_CASE("Unpack_BlockMap_File_missing_from_blockmap", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0051;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::BlockMapSemanticError);
     std::string package               = "BlockMap/File_missing_from_blockmap.msix";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -273,9 +273,9 @@ TEST_CASE("Unpack_BlockMap/File_missing_from_blockmap", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/No_blockmap.appx", "[unpack]")
+TEST_CASE("Unpack_BlockMap_No_blockmap.appx", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0033;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::MissingAppxBlockMapXML);
     std::string package               = "BlockMap/No_blockmap.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -283,9 +283,9 @@ TEST_CASE("Unpack_BlockMap/No_blockmap.appx", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/Bad_Namespace_Blockmap", "[unpack]")
+TEST_CASE("Unpack_BlockMap_Bad_Namespace_Blockmap", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad1003;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::XmlFatal);
     std::string package               = "BlockMap/Bad_Namespace_Blockmap.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;
@@ -293,9 +293,9 @@ TEST_CASE("Unpack_BlockMap/Bad_Namespace_Blockmap", "[unpack]")
     RunUnpackTest(expected, package, validation, packUnpack);
 }
 
-TEST_CASE("Unpack_BlockMap/Duplicate_file_in_blockmap", "[unpack]")
+TEST_CASE("Unpack_BlockMap_Duplicate_file_in_blockmap", "[unpack]")
 {
-    HRESULT expected                  = 0x8bad0051;
+    HRESULT expected                  = static_cast<HRESULT>(MSIX::Error::BlockMapSemanticError);
     std::string package               = "BlockMap/Duplicate_file_in_blockmap.appx";
     MSIX_VALIDATION_OPTION validation = MSIX_VALIDATION_OPTION_SKIPSIGNATURE;
     MSIX_PACKUNPACK_OPTION packUnpack = MSIX_PACKUNPACK_OPTION_NONE;

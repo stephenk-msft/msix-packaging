@@ -13,18 +13,18 @@
 
 namespace MsixTest {
 
-    TestData* TestData::m_instance = nullptr;
+    TestPath* TestPath::m_instance = nullptr;
 
-    TestData* TestData::GetInstance()
+    TestPath* TestPath::GetInstance()
     {
         if (m_instance == nullptr)
         {
-            m_instance = new TestData();
+            m_instance = new TestPath();
         }
         return m_instance;
     }
 
-    void TestData::SetRoot(const char* root)
+    void TestPath::SetRoot(const char* root)
     {
         if (root != nullptr)
         {
@@ -32,13 +32,13 @@ namespace MsixTest {
         }
     }
 
-    std::string TestData::GetRoot()
+    std::string TestPath::GetRoot()
     {
         return m_root;
     }
 
     // Always return using '/' separators
-    std::string TestData::GetPath(Directory opt)
+    std::string TestPath::GetPath(Directory opt)
     {
         switch(opt)
         {
@@ -63,6 +63,7 @@ namespace MsixTest {
     }
 
     namespace String {
+
         std::string utf16_to_utf8(const std::wstring& utf16string)
         {
             auto converted = std::wstring_convert<std::codecvt_utf8<wchar_t>>{}.to_bytes(utf16string.data());
@@ -88,11 +89,11 @@ namespace MsixTest {
             std::cout << "\tExpect: " << std::hex << expect << std::endl << "\tGot:    " << result << std::endl;
             if (result != S_OK)
             {
-                String::Text<char> text;
+                Wrappers::Buffer<char> text;
                 auto logResult = GetLogTextUTF8(Allocators::Allocate, &text);
                 if (0 == logResult)
                 {
-                    std::cout << "LOG:" << std::endl << text.content << std::endl;
+                    std::cout << "LOG:" << std::endl << text.ToString() << std::endl;
                 }
                 else 
                 {
@@ -111,7 +112,7 @@ int msixtest_main(int argc, char* argv[], const char* testDataPath)
 {
     if (testDataPath != nullptr)
     {
-        MsixTest::TestData::GetInstance()->SetRoot(testDataPath);
+        MsixTest::TestPath::GetInstance()->SetRoot(testDataPath);
     }
 
     // Forward the arguments to Catch2
