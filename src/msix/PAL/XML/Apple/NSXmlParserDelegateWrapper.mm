@@ -24,7 +24,18 @@
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict {
     std::unique_ptr<MSIX::XmlNode> node(new MSIX::XmlNode());
     
-    node->NodeName = std::string([elementName UTF8String]);
+    NSArray* list = [elementName componentsSeparatedByString:@":"];
+    if ([list count] == 2)
+    {
+        // Has a namespace
+        node->NamespaceUri = std::string([list[0] UTF8String]);
+        node->NodeName = std::string([list[1] UTF8String]);
+    }
+    else
+    {
+        node->NodeName = std::string([list[0] UTF8String]);
+    }
+    
     if (qName)
     {
         node->QualifiedNodeName = std::string([qName UTF8String]);

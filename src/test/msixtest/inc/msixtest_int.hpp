@@ -89,17 +89,17 @@ namespace MsixTest {
             T** operator&() { return &content; }
             ~Buffer() { Cleanup(); }
             T* Get() { return content; }
-            std::string ToString() { static_assert(std::false_type::type, "ToString not supported"); };
+            std::string ToString() { static_assert(False<T>::value, "ToString not supported"); };
         protected:
             T* content = nullptr;
             void Cleanup() { if (content) { Allocators::Free(content); content = nullptr; } }
         };
 
         template<>
-        std::string Buffer<char>::ToString() { return std::string(content); }
+        inline std::string Buffer<char>::ToString() { return std::string(content); }
 
         template<>
-        std::string Buffer<wchar_t>::ToString() { return String::utf16_to_utf8(content); }
+        inline std::string Buffer<wchar_t>::ToString() { return String::utf16_to_utf8(content); }
     }
 
     namespace Log

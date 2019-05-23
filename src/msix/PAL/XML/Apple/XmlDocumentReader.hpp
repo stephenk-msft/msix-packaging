@@ -26,6 +26,7 @@ public:
     std::string Text;
     std::string NodeName;
     std::string QualifiedNodeName;
+    std::string NamespaceUri;
     
     std::list<XmlNode*> FindElements(std::string xpath);
 private:

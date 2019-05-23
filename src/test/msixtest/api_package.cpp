@@ -193,7 +193,7 @@ TEST_CASE("Api_AppxManifestReader_Applications", "[api]")
         MsixTest::ComPtr<IAppxManifestApplication> app;
         REQUIRE_SUCCEEDED(enumerator->GetCurrent(&app));
 
-        std::string expectedAumid = "Microsoft.ZuneVideo";
+        std::string expectedAumid = "Microsoft.ZuneVideo_8wekyb3d8bbwe!Microsoft.ZuneVideo";
 
         MsixTest::Wrappers::Buffer<wchar_t> aumid;
         REQUIRE_SUCCEEDED(app->GetAppUserModelId(&aumid));
@@ -348,11 +348,11 @@ TEST_CASE("Api_AppxManifestReader_Capabilities", "[api]")
     REQUIRE_SUCCEEDED(packageReader->GetManifest(&manifestReader));
     REQUIRE_NOT_NULL(manifestReader.Get());
 
-    APPX_CAPABILITIES expected = 
+    APPX_CAPABILITIES expected = static_cast<APPX_CAPABILITIES>(
         APPX_CAPABILITY_INTERNET_CLIENT |
         APPX_CAPABILITY_PRIVATE_NETWORK_CLIENT_SERVER |
         APPX_CAPABILITY_VIDEOS_LIBRARY |
-        APPX_CAPABILITY_REMOVABLE_STORAGE;
+        APPX_CAPABILITY_REMOVABLE_STORAGE);
 
     APPX_CAPABILITIES capabilities;
     REQUIRE_SUCCEEDED(manifestReader->GetCapabilities(&capabilities));
