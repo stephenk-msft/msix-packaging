@@ -62,8 +62,9 @@ jobs:
   
   - task: PublishTestResults@2
     displayName: 'Publish $(_artifact) Test Results'
-    failTaskOnFailedTests: true
-    testRunTitle: $(_artifact)
+    inputs:
+      failTaskOnFailedTests: true
+      testRunTitle: $(_artifact)
     condition: and(succeeded(), contains(variables['Agent.JobName'], 'release'))
 
   - task: CopyFiles@2
