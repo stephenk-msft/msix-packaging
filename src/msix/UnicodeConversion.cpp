@@ -23,6 +23,7 @@ namespace MSIX {
 
     std::wstring utf8_to_wstring(const std::string& utf8string)
     {
+        if (utf8string.empty()) { return {}; }
         #ifdef WIN32
         int size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8string.data(), static_cast<int>(utf8string.size()), nullptr, 0);
         ThrowLastErrorIf(size == 0, "Error converting to wstring");
@@ -44,8 +45,9 @@ namespace MSIX {
 
     std::string wstring_to_utf8(const std::wstring& utf16string)
     {
+        if (utf16string.empty()) { return {}; }
         #ifdef WIN32
-        int size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, utf16string.data(), static_cast<int>(utf16string.size()), nullptr, 0, nullptr, nullptr);
+        int size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, utf16string.data(), static_cast<int>(utf16string.size()), NULL, 0, nullptr, nullptr);
         ThrowLastErrorIf(size == 0, "Error converting to string");
         std::string result(size, 0);
         WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, utf16string.data(), static_cast<int>(utf16string.size()), &result[0], size, nullptr, nullptr);

@@ -76,12 +76,13 @@ jobs:
   # Note: We skip BVTs in Debug mode because of assert()
   - script: 'msixtest\msixtest.exe -s -r junit -o TEST-MsixSDK-$(_artifact).xml'
     workingDirectory: .vs
-    failOnStderr: true
     displayName: 'Windows BVTs'
     condition: and(succeeded(), contains(variables['Agent.JobName'], 'release'))
   
   - task: PublishTestResults@2
     displayName: 'Publish $(_artifact) Test Results'
+    failTaskOnFailedTests: true
+    testRunTitle: $(_artifact)
     condition: and(succeeded(), contains(variables['Agent.JobName'], 'release'))
 
   - task: CopyFiles@2
