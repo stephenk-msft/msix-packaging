@@ -13,6 +13,7 @@ usage()
     echo $'\t' "-avd <emulator name>. Name of avd. Default msix_android_emulator"
     echo $'\t' "-c <package>. Create avd with specified package with the name defined by -adv. If not present assume the emulator already exits"
     echo $'\t' "-i . Only used with -c Installs the package specified on c"
+    echo $'\t' "-o <name>. Name of output file. Default TEST-MsixSDK-AOSP.xml"
 }
 
 while [ "$1" != "" ]; do
@@ -27,6 +28,9 @@ while [ "$1" != "" ]; do
              ;;
         -h ) usage
              exit
+             ;;
+        -o ) shift
+             outputFile=$1
              ;;
         * )  usage
              exit 1
@@ -48,7 +52,7 @@ function TerminateEmulator {
     $ANDROID_HOME/platform-tools/adb emu kill &
 }
 
-# Clean up local result files if necesarry
+# Clean up local result files if necessary
 rm -f $outputFile
 
 # Create emulator if requested

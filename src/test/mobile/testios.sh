@@ -3,7 +3,9 @@ testfailed=0
 device="iPhone 8"
 project=iOSBVT/iOSBVT.xcodeproj
 sdk=iphonesimulator
-outputFile=/private/tmp/TEST-MsixSDK-iOS.xml
+# This is the location where the emulator will output the file
+emulatorOutputFile=/private/tmp/TEST-MsixSDK-iOS.xml
+outputFile=TEST-MsixSDK-iOS.xml
 
 usage()
 {
@@ -11,6 +13,7 @@ usage()
     echo $'\t' "-d <device>. Default iPhone 8"
     echo $'\t' "-p <project>. Default is iOSBVT/iOSBVT.xcodeproj"
     echo $'\t' "-sdk <sdk>. Default is iphonesimulator"
+    echo $'\t' "-o <name>. Name of output file. Default TEST-MsixSDK-iOS.xml"
 }
 
 printsetup()
@@ -53,7 +56,8 @@ appId=`xcodebuild -showBuildSettings -project $project | grep PRODUCT_BUNDLE_IDE
 printsetup
 
 # Clean test. The iOSBVT outputs the result file under /private/tmp/TEST-MsixSDK-iOS.xml
-rm -f $outputFile
+rm -f $emulatorOutputFile
+rm -f $out
 
 # Start emulator
 echo "Starting emulator"
@@ -112,4 +116,5 @@ function PrintFile {
     cat $FILE
 }
 
-PrintFile $outputFile
+PrintFile $emulatorOutputFile
+cp $emulatorOutputFile $outputFile

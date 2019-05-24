@@ -39,6 +39,9 @@ jobs:
       release_emulator:
         _arguments: -b MinSizeRel
         _artifact: AOSP-x86
+      release_emulator_nobundle:
+        _arguments: -b MinSizeRel -sb
+        _artifact: AOSP-x86-nobundle
       release_arm:
         _arguments: -b MinSizeRel -arch armeabi-v7a 
         _artifact: AOSP-arm
@@ -57,10 +60,14 @@ jobs:
     displayName: AOSP BVTs
     inputs:
       targetType: filePath
-      filePath: './test/MacOS-Linux/testaosponmac.sh'
-      arguments: '-c "system-images;android-19;google_apis;x86" -i'
-      workingDirectory: './test/MacOS-Linux'
+      filePath: './testaosponmac.sh'
+      arguments: '-c "system-images;android-19;google_apis;x86" -i -o TEST-MsixSDK-$(_artifact).xml'
+      workingDirectory: './src/test/mobile/'
     condition: and(succeeded(), contains(variables['Agent.JobName'], 'release_emulator'))
+
+  - task: PublishTestResults@2
+    displayName: 'Publish $(_artifact) Test Results'
+    condition: and(succeeded(), contains(variables['Agent.JobName'], 'release'))
 
   - task: CopyFiles@2
     displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
