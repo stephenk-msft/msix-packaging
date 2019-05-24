@@ -39,7 +39,7 @@ jobs:
       release:
         _arguments: -b MinSizeRel
         _artifact: LINUX
-      release:
+      release_nobundle:
         _arguments: -b MinSizeRel -sb
         _artifact: LINUX-nobundle
       release_validation_parser:
