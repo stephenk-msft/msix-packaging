@@ -24,9 +24,13 @@ list(APPEND MsixTestFiles
     testData/BlockMapTestData.cpp
 )
 
-if(NOT SKIP_BUNDLES)
+if(SKIP_BUNDLES)
+    list(APPEND MsixTestFiles
+        no_bundle.cpp)
+else()
     list(APPEND MsixTestFiles
         unbundle.cpp
+        api_bundle.cpp
         testData/UnbundleTestData.cpp
     )
 endif()
