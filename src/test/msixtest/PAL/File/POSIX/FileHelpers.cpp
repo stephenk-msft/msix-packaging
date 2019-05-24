@@ -5,6 +5,8 @@
 #include "msixtest_int.hpp"
 #include "FileHelpers.hpp"
 
+#include <memory>
+#include <algorithm>
 #include <string>
 #include <map>
 #include <iostream>

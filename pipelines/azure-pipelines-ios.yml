@@ -61,7 +61,7 @@ jobs:
     displayName: iOS BVTs
     inputs:
       targetType: filePath
-      filePath: './testios.sh'
+      filePath: './src/test/mobile/testios.sh'
       arguments: '-p iOSBVT/iOSBVT.xcodeproj -o TEST-MsixSDK-$(_artifact).xml'
       workingDirectory: './src/test/mobile/'
       failOnStderr: true
