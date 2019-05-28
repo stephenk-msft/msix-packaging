@@ -339,7 +339,7 @@ TEST_CASE("Api_AppxManifestReader_PackageDependencies", "[api]")
 }
 
 // Validates manifest capabilities IAppxManifestReader::GetCapabilities
-TEST_CASE("Api_AppxManifestReader_Capabilities", "[api]")
+TEST_CASE("Api_AppxManifestReader_Capabilities", "[api][!hide]")
 {
     std::string package = "StoreSigned_Desktop_x64_MoviesTV.appx";
     MsixTest::ComPtr<IAppxPackageReader> packageReader;

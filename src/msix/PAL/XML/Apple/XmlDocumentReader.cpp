@@ -37,15 +37,7 @@ void XmlDocumentReader::ProcessNodeEnd(std::string nodeName)
     if (!m_currentNodeStack.empty())
     {
         auto currentNode = m_currentNodeStack.top();
-        auto find = nodeName.find_first_of(":");
-        if (find != std::string::npos)
-        {
-            auto nodeNameSpace = nodeName.substr(0, find);
-            nodeName = nodeName.substr(find+1);
-            ThrowErrorIf(Error::XmlFatal, nodeNameSpace != currentNode->NamespaceUri,
-                         "Namespace of node end does not match current node opened.");
-        }
-        ThrowErrorIf(Error::XmlFatal, nodeName != currentNode->NodeName, "Node end does not match current node opened.");
+        ThrowErrorIf(Error::XmlFatal, nodeName.compare(currentNode->NodeName) != 0, "Node end does not match current node opened.");
         m_currentNodeStack.pop();
     }
 }

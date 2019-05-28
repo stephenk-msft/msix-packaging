@@ -65,7 +65,7 @@ jobs:
     inputs:
       failTaskOnFailedTests: true
       testRunTitle: $(_artifact)
-    condition: and(succeeded(), contains(variables['Agent.JobName'], 'release'))
+    condition: and(succeededOrFailed(), contains(variables['Agent.JobName'], 'release'))
 
   - task: CopyFiles@2
     displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
