@@ -128,6 +128,7 @@ cd $projectdir
 # Get Results
 $ANDROID_HOME/platform-tools/adb shell "run-as com.microsoft.androidbvt cat /data/data/com.microsoft.androidbvt/files/TEST-MsixSDK-AOSP.xml" > $outputFile
 echo "Tests completed"
+sleep 10
 TerminateEmulator
 
 PrintFile $outputFile
