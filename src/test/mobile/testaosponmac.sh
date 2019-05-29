@@ -119,7 +119,6 @@ do
     ((count+=5))
     if [ $count -eq 240 ]; then
         echo "Test never completed"
-        TerminateEmulator
         exit 1
     fi
     sleep 5
@@ -128,7 +127,7 @@ cd $projectdir
 
 # Get Results
 $ANDROID_HOME/platform-tools/adb shell "run-as com.microsoft.androidbvt cat /data/data/com.microsoft.androidbvt/files/TEST-MsixSDK-AOSP.xml" > $outputFile
-
+echo "Tests completed"
 TerminateEmulator
 
 PrintFile $outputFile
